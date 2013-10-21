@@ -89,55 +89,96 @@ class PercutaneousApproachAnalysisWidget:
     parametersFormLayout = qt.QFormLayout(parametersCollapsibleButton)
 
     #
-    # input volume selector
+    # Target point (vtkMRMLMarkupsFiducialNode)
     #
-    self.inputSelector = slicer.qMRMLNodeComboBox()
-    self.inputSelector.nodeTypes = ( ("vtkMRMLScalarVolumeNode"), "" )
-    self.inputSelector.addAttribute( "vtkMRMLScalarVolumeNode", "LabelMap", 0 )
-    self.inputSelector.selectNodeUponCreation = True
-    self.inputSelector.addEnabled = False
-    self.inputSelector.removeEnabled = False
-    self.inputSelector.noneEnabled = False
-    self.inputSelector.showHidden = False
-    self.inputSelector.showChildNodeTypes = False
-    self.inputSelector.setMRMLScene( slicer.mrmlScene )
-    self.inputSelector.setToolTip( "Pick the input to the algorithm." )
-    parametersFormLayout.addRow("Input Volume: ", self.inputSelector)
+    self.targetSelector = slicer.qMRMLNodeComboBox()
+    self.targetSelector.nodeTypes = ( ("vtkMRMLMarkupsFiducialNode"), "" )
+    self.targetSelector.addEnabled = False
+    self.targetSelector.removeEnabled = False
+    self.targetSelector.noneEnabled = False
+    self.targetSelector.showHidden = False
+    self.targetSelector.showChildNodeTypes = False
+    self.targetSelector.setMRMLScene( slicer.mrmlScene )
+    self.targetSelector.setToolTip( "Pick up the target point" )
+    parametersFormLayout.addRow("Target Point: ", self.targetSelector)
+
+    ##
+    ## output volume selector
+    ##
+    #self.outputModelSelector = slicer.qMRMLNodeComboBox()
+    #self.outputModelSelector.nodeTypes = ( ("vtkMRMLScalarVolumeNode"), "" )
+    #self.outputModelSelector.addAttribute( "vtkMRMLScalarVolumeNode", "LabelMap", 0 )
+    #self.outputModelSelector.selectNodeUponCreation = False
+    #self.outputModelSelector.addEnabled = True
+    #self.outputModelSelector.removeEnabled = True
+    #self.outputModelSelector.noneEnabled = False
+    #self.outputModelSelector.showHidden = False
+    #self.outputModelSelector.showChildNodeTypes = False
+    #self.outputModelSelector.setMRMLScene( slicer.mrmlScene )
+    #self.outputModelSelector.setToolTip( "Pick the output to the algorithm." )
+    #parametersFormLayout.addRow("Output Volume: ", self.outputSelector)
 
     #
-    # output volume selector
+    # Obstacle model (vtkMRMLModelNode)
     #
-    self.outputSelector = slicer.qMRMLNodeComboBox()
-    self.outputSelector.nodeTypes = ( ("vtkMRMLScalarVolumeNode"), "" )
-    self.outputSelector.addAttribute( "vtkMRMLScalarVolumeNode", "LabelMap", 0 )
-    self.outputSelector.selectNodeUponCreation = False
-    self.outputSelector.addEnabled = True
-    self.outputSelector.removeEnabled = True
-    self.outputSelector.noneEnabled = False
-    self.outputSelector.showHidden = False
-    self.outputSelector.showChildNodeTypes = False
-    self.outputSelector.setMRMLScene( slicer.mrmlScene )
-    self.outputSelector.setToolTip( "Pick the output to the algorithm." )
-    parametersFormLayout.addRow("Output Volume: ", self.outputSelector)
+    self.obstacleModelSelector = slicer.qMRMLNodeComboBox()
+    self.obstacleModelSelector.nodeTypes = ( ("vtkMRMLModelNode"), "" )
+    self.obstacleModelSelector.addEnabled = False
+    self.obstacleModelSelector.removeEnabled = False
+    self.obstacleModelSelector.noneEnabled = False
+    self.obstacleModelSelector.showHidden = False
+    self.obstacleModelSelector.showChildNodeTypes = False
+    self.obstacleModelSelector.setMRMLScene( slicer.mrmlScene )
+    self.obstacleModelSelector.setToolTip( "Pick the input to the algorithm." )
+    parametersFormLayout.addRow("Obstacle Model: ", self.obstacleModelSelector)
 
     #
-    # check box to trigger taking screen shots for later use in tutorials
+    # Skin model (vtkMRMLModelNode)
     #
-    self.enableScreenshotsFlagCheckBox = qt.QCheckBox()
-    self.enableScreenshotsFlagCheckBox.checked = 0
-    self.enableScreenshotsFlagCheckBox.setToolTip("If checked, take screen shots for tutorials. Use Save Data to write them to disk.")
-    parametersFormLayout.addRow("Enable Screenshots", self.enableScreenshotsFlagCheckBox)
+    self.skinModelSelector = slicer.qMRMLNodeComboBox()
+    self.skinModelSelector.nodeTypes = ( ("vtkMRMLModelNode"), "" )
+    self.skinModelSelector.addEnabled = False
+    self.skinModelSelector.removeEnabled = False
+    self.skinModelSelector.noneEnabled = False
+    self.skinModelSelector.showHidden = False
+    self.skinModelSelector.showChildNodeTypes = False
+    self.skinModelSelector.setMRMLScene( slicer.mrmlScene )
+    self.skinModelSelector.setToolTip( "Pick the input to the algorithm." )
+    parametersFormLayout.addRow("Skin Model: ", self.skinModelSelector)
 
     #
-    # scale factor for screen shots
+    # Output model (vtkMRMLModelNode)
     #
-    self.screenshotScaleFactorSliderWidget = ctk.ctkSliderWidget()
-    self.screenshotScaleFactorSliderWidget.singleStep = 1.0
-    self.screenshotScaleFactorSliderWidget.minimum = 1.0
-    self.screenshotScaleFactorSliderWidget.maximum = 50.0
-    self.screenshotScaleFactorSliderWidget.value = 1.0
-    self.screenshotScaleFactorSliderWidget.setToolTip("Set scale factor for the screen shots.")
-    parametersFormLayout.addRow("Screenshot scale factor", self.screenshotScaleFactorSliderWidget)
+    self.outputModelSelector = slicer.qMRMLNodeComboBox()
+    self.outputModelSelector.nodeTypes = ( ("vtkMRMLModelNode"), "" )
+    self.outputModelSelector.selectNodeUponCreation = False
+    self.outputModelSelector.addEnabled = True
+    self.outputModelSelector.removeEnabled = True
+    self.outputModelSelector.noneEnabled = False
+    self.outputModelSelector.showHidden = False
+    self.outputModelSelector.showChildNodeTypes = False
+    self.outputModelSelector.setMRMLScene( slicer.mrmlScene )
+    self.outputModelSelector.setToolTip( "Pick the output to the algorithm." )
+    parametersFormLayout.addRow("Output Model: ", self.outputModelSelector)
+
+    ##
+    ## check box to trigger taking screen shots for later use in tutorials
+    ##
+    #self.enableScreenshotsFlagCheckBox = qt.QCheckBox()
+    #self.enableScreenshotsFlagCheckBox.checked = 0
+    #self.enableScreenshotsFlagCheckBox.setToolTip("If checked, take screen shots for tutorials. Use Save Data to write them to disk.")
+    #parametersFormLayout.addRow("Enable Screenshots", self.enableScreenshotsFlagCheckBox)
+
+    ##
+    ## scale factor for screen shots
+    ##
+    #self.screenshotScaleFactorSliderWidget = ctk.ctkSliderWidget()
+    #self.screenshotScaleFactorSliderWidget.singleStep = 1.0
+    #self.screenshotScaleFactorSliderWidget.minimum = 1.0
+    #self.screenshotScaleFactorSliderWidget.maximum = 50.0
+    #self.screenshotScaleFactorSliderWidget.value = 1.0
+    #self.screenshotScaleFactorSliderWidget.setToolTip("Set scale factor for the screen shots.")
+    #parametersFormLayout.addRow("Screenshot scale factor", self.screenshotScaleFactorSliderWidget)
 
     #
     # Apply Button
@@ -149,8 +190,8 @@ class PercutaneousApproachAnalysisWidget:
 
     # connections
     self.applyButton.connect('clicked(bool)', self.onApplyButton)
-    self.inputSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
-    self.outputSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
+    #self.inputSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
+    #self.outputSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
 
     # Add vertical spacer
     self.layout.addStretch(1)
@@ -159,14 +200,15 @@ class PercutaneousApproachAnalysisWidget:
     pass
 
   def onSelect(self):
-    self.applyButton.enabled = self.inputSelector.currentNode() and self.outputSelector.currentNode()
+    #self.applyButton.enabled = self.inputSelector.currentNode() and self.outputSelector.currentNode()
+    pass
 
   def onApplyButton(self):
     logic = PercutaneousApproachAnalysisLogic()
-    enableScreenshotsFlag = self.enableScreenshotsFlagCheckBox.checked
-    screenshotScaleFactor = int(self.screenshotScaleFactorSliderWidget.value)
+    #enableScreenshotsFlag = self.enableScreenshotsFlagCheckBox.checked
+    #screenshotScaleFactor = int(self.screenshotScaleFactorSliderWidget.value)
     print("Run the algorithm")
-    logic.run(self.inputSelector.currentNode(), self.outputSelector.currentNode(), enableScreenshotsFlag,screenshotScaleFactor)
+    #logic.run(self.inputSelector.currentNode(), self.outputSelector.currentNode(), enableScreenshotsFlag,screenshotScaleFactor)
 
   def onReload(self,moduleName="PercutaneousApproachAnalysis"):
     """Generic reload method for any scripted module.

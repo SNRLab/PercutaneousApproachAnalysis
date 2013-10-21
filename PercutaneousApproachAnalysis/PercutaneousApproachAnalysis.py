@@ -132,6 +132,17 @@ class PercutaneousApproachAnalysisWidget:
     self.obstacleModelSelector.setToolTip( "Pick the input to the algorithm." )
     parametersFormLayout.addRow("Obstacle Model: ", self.obstacleModelSelector)
 
+    ##
+    ## scale factor for Obstacle level
+    ##
+    #self.ObstacleScaleFactorSliderWidget = ctk.ctkSliderWidget()
+    #self.ObstacleScaleFactorSliderWidget.singleStep = 1.0
+    #self.ObstacleScaleFactorSliderWidget.minimum = 1.0
+    #self.ObstacleScaleFactorSliderWidget.maximum = 50.0
+    #self.ObstacleScaleFactorSliderWidget.value = 1.0
+    #self.ObstacleScaleFactorSliderWidget.setToolTip("Set the Obstacle scale.")
+    #parametersFormLayout.addRow("Obstacle scale factor", self.ObstacleScaleFactorSliderWidget)
+    
     #
     # Skin model (vtkMRMLModelNode)
     #
@@ -172,13 +183,13 @@ class PercutaneousApproachAnalysisWidget:
     ##
     ## scale factor for screen shots
     ##
-    #self.screenshotScaleFactorSliderWidget = ctk.ctkSliderWidget()
-    #self.screenshotScaleFactorSliderWidget.singleStep = 1.0
-    #self.screenshotScaleFactorSliderWidget.minimum = 1.0
-    #self.screenshotScaleFactorSliderWidget.maximum = 50.0
-    #self.screenshotScaleFactorSliderWidget.value = 1.0
-    #self.screenshotScaleFactorSliderWidget.setToolTip("Set scale factor for the screen shots.")
-    #parametersFormLayout.addRow("Screenshot scale factor", self.screenshotScaleFactorSliderWidget)
+    self.screenshotScaleFactorSliderWidget = ctk.ctkSliderWidget()
+    self.screenshotScaleFactorSliderWidget.singleStep = 1.0
+    self.screenshotScaleFactorSliderWidget.minimum = 1.0
+    self.screenshotScaleFactorSliderWidget.maximum = 50.0
+    self.screenshotScaleFactorSliderWidget.value = 1.0
+    self.screenshotScaleFactorSliderWidget.setToolTip("Set scale factor for the screen shots.")
+    parametersFormLayout.addRow("Screenshot scale factor", self.screenshotScaleFactorSliderWidget)
 
     #
     # Apply Button
@@ -202,11 +213,11 @@ class PercutaneousApproachAnalysisWidget:
   def onSelect(self):
     #self.applyButton.enabled = self.inputSelector.currentNode() and self.outputSelector.currentNode()
     pass
-
+  
   def onApplyButton(self):
     logic = PercutaneousApproachAnalysisLogic()
-    #enableScreenshotsFlag = self.enableScreenshotsFlagCheckBox.checked
-    #screenshotScaleFactor = int(self.screenshotScaleFactorSliderWidget.value)
+    enableScreenshotsFlag = self.enableScreenshotsFlagCheckBox.checked
+    screenshotScaleFactor = int(self.screenshotScaleFactorSliderWidget.value)
     print("Run the algorithm")
     #logic.run(self.inputSelector.currentNode(), self.outputSelector.currentNode(), enableScreenshotsFlag,screenshotScaleFactor)
 

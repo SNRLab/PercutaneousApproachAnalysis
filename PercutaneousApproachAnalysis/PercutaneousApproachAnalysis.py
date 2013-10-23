@@ -95,7 +95,7 @@ class PercutaneousApproachAnalysisWidget:
     self.targetSelector.nodeTypes = ( ("vtkMRMLMarkupsFiducialNode"), "" )
     self.targetSelector.addEnabled = False
     self.targetSelector.removeEnabled = False
-    self.targetSelector.noneEnabled = False
+    self.targetSelector.noneEnabled = True
     self.targetSelector.showHidden = False
     self.targetSelector.showChildNodeTypes = False
     self.targetSelector.setMRMLScene( slicer.mrmlScene )
@@ -111,7 +111,7 @@ class PercutaneousApproachAnalysisWidget:
     #self.outputModelSelector.selectNodeUponCreation = False
     #self.outputModelSelector.addEnabled = True
     #self.outputModelSelector.removeEnabled = True
-    #self.outputModelSelector.noneEnabled = False
+    #self.outputModelSelector.noneEnabled =  True
     #self.outputModelSelector.showHidden = False
     #self.outputModelSelector.showChildNodeTypes = False
     #self.outputModelSelector.setMRMLScene( slicer.mrmlScene )
@@ -125,7 +125,7 @@ class PercutaneousApproachAnalysisWidget:
     self.obstacleModelSelector.nodeTypes = ( ("vtkMRMLModelNode"), "" )
     self.obstacleModelSelector.addEnabled = False
     self.obstacleModelSelector.removeEnabled = False
-    self.obstacleModelSelector.noneEnabled = False
+    self.obstacleModelSelector.noneEnabled =  True
     self.obstacleModelSelector.showHidden = False
     self.obstacleModelSelector.showChildNodeTypes = False
     self.obstacleModelSelector.setMRMLScene( slicer.mrmlScene )
@@ -150,7 +150,7 @@ class PercutaneousApproachAnalysisWidget:
     self.skinModelSelector.nodeTypes = ( ("vtkMRMLModelNode"), "" )
     self.skinModelSelector.addEnabled = False
     self.skinModelSelector.removeEnabled = False
-    self.skinModelSelector.noneEnabled = False
+    self.skinModelSelector.noneEnabled =  True
     self.skinModelSelector.showHidden = False
     self.skinModelSelector.showChildNodeTypes = False
     self.skinModelSelector.setMRMLScene( slicer.mrmlScene )
@@ -165,7 +165,7 @@ class PercutaneousApproachAnalysisWidget:
     self.outputModelSelector.selectNodeUponCreation = False
     self.outputModelSelector.addEnabled = True
     self.outputModelSelector.removeEnabled = True
-    self.outputModelSelector.noneEnabled = False
+    self.outputModelSelector.noneEnabled =  True
     self.outputModelSelector.showHidden = False
     self.outputModelSelector.showChildNodeTypes = False
     self.outputModelSelector.setMRMLScene( slicer.mrmlScene )
@@ -201,8 +201,10 @@ class PercutaneousApproachAnalysisWidget:
 
     # connections
     self.applyButton.connect('clicked(bool)', self.onApplyButton)
-    #self.inputSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
-    #self.outputSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
+    self.targetSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
+    self.obstacleModelSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
+    self.skinModelSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
+    self.outputModelSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
 
     # Add vertical spacer
     self.layout.addStretch(1)
@@ -211,15 +213,17 @@ class PercutaneousApproachAnalysisWidget:
     pass
 
   def onSelect(self):
-    #self.applyButton.enabled = self.inputSelector.currentNode() and self.outputSelector.currentNode()
-    pass
+    if (self.targetSelector.currentNode() != None) and (self.obstacleModelSelector.currentNode() != None) and (self.skinModelSelector.currentNode() != None) and (self.outputModelSelector.currentNode() != None):
+    	self.applyButton.enabled = True
   
   def onApplyButton(self):
     logic = PercutaneousApproachAnalysisLogic()
-    enableScreenshotsFlag = self.enableScreenshotsFlagCheckBox.checked
-    screenshotScaleFactor = int(self.screenshotScaleFactorSliderWidget.value)
-    print("Run the algorithm")
-    #logic.run(self.inputSelector.currentNode(), self.outputSelector.currentNode(), enableScreenshotsFlag,screenshotScaleFactor)
+    print("onApplyButton() is called ")
+    targetPoint = self.targetSelector.currentNode()
+    obstacleModel = self.obstacleModelSelector.currentNode()
+    skinModel = self.skinModelSelector.currentNode()
+    outputModel = self.outputModelSelector.currentNode()
+    logic.run(targetPoint, obstacleModel, skinModel, outputModel)
 
   def onReload(self,moduleName="PercutaneousApproachAnalysis"):
     """Generic reload method for any scripted module.
@@ -357,18 +361,21 @@ class PercutaneousApproachAnalysisLogic:
     annotationLogic = slicer.modules.annotations.logic()
     annotationLogic.CreateSnapShot(name, description, type, self.screenshotScaleFactor, imageData)
 
-  def run(self,inputVolume,outputVolume,enableScreenshots=0,screenshotScaleFactor=1):
+  def run(self, targetPoint, obstacleModel, skinModel, outputModel):
     """
     Run the actual algorithm
     """
+    print ('run() is called')
 
-    self.delayDisplay('Running the aglorithm')
-
-    self.enableScreenshots = enableScreenshots
-    self.screenshotScaleFactor = screenshotScaleFactor
-
-    self.takeScreenshot('PercutaneousApproachAnalysis-Start','Start',-1)
-
+    poly = skinModel.GetPolyData()
+    polyDataNormals = vtk.vtkPolyDataNormals()
+    polyDataNormals.SetInput(poly)
+    polyDataNormals.Update()
+    polyData = polyDataNormals.GetOutput()
+    nPoints = polyData.GetNumberOfPoints()
+    x=[0.0, 0.0, 0.0]
+    for index in range(0, nPoints):
+        polyData.GetPoint(index, x)
     return True
 
 

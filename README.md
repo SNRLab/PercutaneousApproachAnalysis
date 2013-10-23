@@ -10,6 +10,7 @@ Plan
 
 We will use vtkModifiedBSPTree to search intersections between a needle trajectory and other objects.
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   def main(int, char *[])
 	vtkSmartPointer<vtkSphereSource> sphereSource =
 	vtkSmartPointer<vtkSphereSource>::New();
@@ -40,4 +41,5 @@ We will use vtkModifiedBSPTree to search intersections between a needle trajecto
   	std::cout << "t: " << t << std::endl;
   	std::cout << "x: " << x[0] << " " << x[1] << " " << x[2] << std::endl;
  
-  main()
+ 	 main()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

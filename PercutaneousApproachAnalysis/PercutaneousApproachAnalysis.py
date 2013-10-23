@@ -361,21 +361,35 @@ class PercutaneousApproachAnalysisLogic:
     annotationLogic = slicer.modules.annotations.logic()
     annotationLogic.CreateSnapShot(name, description, type, self.screenshotScaleFactor, imageData)
 
-  def run(self, targetPoint, obstacleModel, skinModel, outputModel):
+  def run(self, targetPointNode, obstacleModelNode, skinModelNode, outputModelNode):
     """
     Run the actual algorithm
     """
     print ('run() is called')
-
-    poly = skinModel.GetPolyData()
+    
+    tPoint = targetPointNode.GetMarkupPointVector(0, 0)
+    p2 = [tPoint[0], tPoint[1], tPoint[2]]
+    poly = skinModelNode.GetPolyData()
     polyDataNormals = vtk.vtkPolyDataNormals()
     polyDataNormals.SetInput(poly)
     polyDataNormals.Update()
     polyData = polyDataNormals.GetOutput()
     nPoints = polyData.GetNumberOfPoints()
-    x=[0.0, 0.0, 0.0]
-    for index in range(0, nPoints):
-        polyData.GetPoint(index, x)
+    p1=[0.0, 0.0, 0.0]
+    
+    tolerance = 0.001
+    t = vtk.mutable(0.0)
+    x = [0.0, 0.0, 0.0]
+    pcoords = [0.0, 0.0, 0.0]
+    subId = vtk.mutable(0)
+    for index in range(90000, 90200):
+        polyData.GetPoint(index, p1)
+        bspTree = vtk.vtkModifiedBSPTree()
+        bspTree.SetDataSet(obstacleModelNode.GetPolyData())
+        bspTree.BuildLocator()
+        iD = bspTree.IntersectWithLine(p1, p2, tolerance, t, x, pcoords, subId)
+        print(p1)
+        print('iD=%d, t=(%f, x=%f, %f, %f)' % (iD, t, x[0], x[1], x[2]))
     return True
 
 

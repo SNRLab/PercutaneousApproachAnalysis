@@ -382,6 +382,7 @@ class PercutaneousApproachAnalysisLogic:
     x = [0.0, 0.0, 0.0]
     pcoords = [0.0, 0.0, 0.0]
     subId = vtk.mutable(0)
+<<<<<<< HEAD:PercutaneousApproachAnalysis/old/PercutaneousApproachAnalysis.py
     
     for index in range(1000):
         polyData.GetPoint(index, p1)
@@ -400,8 +401,34 @@ class PercutaneousApproachAnalysisLogic:
         #print (iD)
 　　　　
         
+=======
+
+    pointValue = vtk.vtkDoubleArray()
+    pointValue.SetName("Colors")
+    pointValue.SetNumberOfComponents(1)
+    pointValue.SetNumberOfTuples(nPoints)
+    pointValue.Reset()
+
+    bspTree = vtk.vtkModifiedBSPTree()
+    bspTree.SetDataSet(obstacleModelNode.GetPolyData())
+    bspTree.BuildLocator()
+
+    for index in range(nPoints):
+      polyData.GetPoint(index, p1)
+      iD = bspTree.IntersectWithLine(p1, p2, tolerance, t, x, pcoords, subId)
+      pointValue.InsertValue(index, 50*iD+1)
+
+    skinModelNode.AddPointScalars(pointValue)
+    skinModelNode.SetActivePointScalars("Colors", vtk.vtkDataSetAttributes.SCALARS)
+    skinModelNode.Modified()
+    displayNode = skinModelNode.GetModelDisplayNode()
+    displayNode.SetActiveScalarName("Colors")
+    displaynode.SetScalarRange(0,100)
+
+>>>>>>> 3d40659e36181db26a812e9122ae97b029e69bb8:PercutaneousApproachAnalysis/PercutaneousApproachAnalysis.py
     return True
     
+
 
 class PercutaneousApproachAnalysisTest(unittest.TestCase):
   """

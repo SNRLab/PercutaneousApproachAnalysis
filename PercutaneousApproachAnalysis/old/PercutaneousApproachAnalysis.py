@@ -382,26 +382,8 @@ class PercutaneousApproachAnalysisLogic:
     x = [0.0, 0.0, 0.0]
     pcoords = [0.0, 0.0, 0.0]
     subId = vtk.mutable(0)
-<<<<<<< HEAD:PercutaneousApproachAnalysis/old/PercutaneousApproachAnalysis.py
-    
-    for index in range(1000):
-        polyData.GetPoint(index, p1)
-        bspTree = vtk.vtkModifiedBSPTree()
-        bspTree.SetDataSet(obstacleModelNode.GetPolyData())
-        bspTree.BuildLocator()
-        x = [0.0, 0.0, 0.0]
-        iD = bspTree.IntersectWithLine(p1, p2, tolerance, t, x, pcoords, subId)
-        # print(p1)
-        # print('iD=%d, t=(%f, x=%f, %f, %f)' % (iD, t, x[0], x[1], x[2]))
-        
-        #if iD == 1:
-　　　　  #   iD = iD + 1
-　　　　 #elif n == 0:
-　　　　　#    iD = iD
-        #print (iD)
 　　　　
         
-=======
 
     pointValue = vtk.vtkDoubleArray()
     pointValue.SetName("Colors")
@@ -425,7 +407,6 @@ class PercutaneousApproachAnalysisLogic:
     displayNode.SetActiveScalarName("Colors")
     displaynode.SetScalarRange(0,100)
 
->>>>>>> 3d40659e36181db26a812e9122ae97b029e69bb8:PercutaneousApproachAnalysis/PercutaneousApproachAnalysis.py
     return True
     
 

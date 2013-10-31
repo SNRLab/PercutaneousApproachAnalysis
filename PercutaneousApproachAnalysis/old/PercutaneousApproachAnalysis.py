@@ -382,16 +382,26 @@ class PercutaneousApproachAnalysisLogic:
     x = [0.0, 0.0, 0.0]
     pcoords = [0.0, 0.0, 0.0]
     subId = vtk.mutable(0)
-    for index in range(90000, 90200):
+    
+    for index in range(1000):
         polyData.GetPoint(index, p1)
         bspTree = vtk.vtkModifiedBSPTree()
         bspTree.SetDataSet(obstacleModelNode.GetPolyData())
         bspTree.BuildLocator()
+        x = [0.0, 0.0, 0.0]
         iD = bspTree.IntersectWithLine(p1, p2, tolerance, t, x, pcoords, subId)
-        print(p1)
-        print('iD=%d, t=(%f, x=%f, %f, %f)' % (iD, t, x[0], x[1], x[2]))
+        # print(p1)
+        # print('iD=%d, t=(%f, x=%f, %f, %f)' % (iD, t, x[0], x[1], x[2]))
+        
+        #if iD == 1:
+　　　　  #   iD = iD + 1
+　　　　 #elif n == 0:
+　　　　　#    iD = iD
+        #print (iD)
+　　　　
+        
     return True
-
+    
 
 class PercutaneousApproachAnalysisTest(unittest.TestCase):
   """

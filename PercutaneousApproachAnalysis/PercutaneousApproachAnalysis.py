@@ -382,15 +382,31 @@ class PercutaneousApproachAnalysisLogic:
     x = [0.0, 0.0, 0.0]
     pcoords = [0.0, 0.0, 0.0]
     subId = vtk.mutable(0)
-    for index in range(90000, 90200):
-        polyData.GetPoint(index, p1)
-        bspTree = vtk.vtkModifiedBSPTree()
-        bspTree.SetDataSet(obstacleModelNode.GetPolyData())
-        bspTree.BuildLocator()
-        iD = bspTree.IntersectWithLine(p1, p2, tolerance, t, x, pcoords, subId)
-        print(p1)
-        print('iD=%d, t=(%f, x=%f, %f, %f)' % (iD, t, x[0], x[1], x[2]))
+
+    pointValue = vtk.vtkDoubleArray()
+    pointValue.SetName("Colors")
+    pointValue.SetNumberOfComponents(1)
+    pointValue.SetNumberOfTuples(nPoints)
+    pointValue.Reset()
+
+    bspTree = vtk.vtkModifiedBSPTree()
+    bspTree.SetDataSet(obstacleModelNode.GetPolyData())
+    bspTree.BuildLocator()
+
+    for index in range(nPoints):
+      polyData.GetPoint(index, p1)
+      iD = bspTree.IntersectWithLine(p1, p2, tolerance, t, x, pcoords, subId)
+      pointValue.InsertValue(index, 50*iD+1)
+
+    skinModelNode.AddPointScalars(pointValue)
+    skinModelNode.SetActivePointScalars("Colors", vtk.vtkDataSetAttributes.SCALARS)
+    skinModelNode.Modified()
+    displayNode = skinModelNode.GetModelDisplayNode()
+    displayNode.SetActiveScalarName("Colors")
+    displaynode.SetScalarRange(0,100)
+
     return True
+
 
 
 class PercutaneousApproachAnalysisTest(unittest.TestCase):

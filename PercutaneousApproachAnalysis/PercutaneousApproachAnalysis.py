@@ -11,13 +11,14 @@ class PercutaneousApproachAnalysis:
     parent.title = "PercutaneousApproachAnalysis" # TODO make this more human readable by adding spaces
     parent.categories = ["Examples"]
     parent.dependencies = []
-    parent.contributors = ["Jean-Christophe Fillion-Robin (Kitware), Steve Pieper (Isomics)"] # replace with "Firstname Lastname (Org)"
+    parent.contributors = ["Junichi Tokuda (Brigham and Women's Hospital), Koichiro Murakami (Shiga University of Medical Science), Atsushi Yamada (Shiga University of Medical Science)"] # replace with "Firstname Lastname (Org)"
     parent.helpText = """
     This is an example of scripted loadable module bundled in an extension.
     """
-    parent.acknowledgementText = """
-    This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc. and Steve Pieper, Isomics, Inc.  and was partially funded by NIH grant 3P41RR013218-12S1.
-""" # replace with organization, grant and thanks.
+    #parent.acknowledgementText = """
+    #This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc. and Steve Pieper, Isomics, Inc.  and was partially funded by NIH grant 3P41RR013218-12S1.
+#""" # replace with organization, grant and thanks.
+    parent.acknowledgementText = """ """
     self.parent = parent
 
     # Add this test to the SelfTest module's list for discovery when the module
@@ -58,6 +59,7 @@ class PercutaneousApproachAnalysisWidget:
     #
     reloadCollapsibleButton = ctk.ctkCollapsibleButton()
     reloadCollapsibleButton.text = "Reload && Test"
+    reloadCollapsibleButton.collapsed = True
     self.layout.addWidget(reloadCollapsibleButton)
     reloadFormLayout = qt.QFormLayout(reloadCollapsibleButton)
 
@@ -102,21 +104,19 @@ class PercutaneousApproachAnalysisWidget:
     self.targetSelector.setToolTip( "Pick up the target point" )
     parametersFormLayout.addRow("Target Point: ", self.targetSelector)
 
-    ##
-    ## output volume selector
-    ##
-    #self.outputModelSelector = slicer.qMRMLNodeComboBox()
-    #self.outputModelSelector.nodeTypes = ( ("vtkMRMLScalarVolumeNode"), "" )
-    #self.outputModelSelector.addAttribute( "vtkMRMLScalarVolumeNode", "LabelMap", 0 )
-    #self.outputModelSelector.selectNodeUponCreation = False
-    #self.outputModelSelector.addEnabled = True
-    #self.outputModelSelector.removeEnabled = True
-    #self.outputModelSelector.noneEnabled =  True
-    #self.outputModelSelector.showHidden = False
-    #self.outputModelSelector.showChildNodeTypes = False
-    #self.outputModelSelector.setMRMLScene( slicer.mrmlScene )
-    #self.outputModelSelector.setToolTip( "Pick the output to the algorithm." )
-    #parametersFormLayout.addRow("Output Volume: ", self.outputSelector)
+    #
+    # target model (vtkMRMLModelNode)
+    #
+    self.targetModelSelector = slicer.qMRMLNodeComboBox()
+    self.targetModelSelector.nodeTypes = ( ("vtkMRMLModelNode"), "" )
+    self.targetModelSelector.addEnabled = False
+    self.targetModelSelector.removeEnabled = False
+    self.targetModelSelector.noneEnabled =  True
+    self.targetModelSelector.showHidden = False
+    self.targetModelSelector.showChildNodeTypes = False
+    self.targetModelSelector.setMRMLScene( slicer.mrmlScene )
+    self.targetModelSelector.setToolTip( "Pick the target model to the algorithm." )
+    parametersFormLayout.addRow("Target Model: ", self.targetModelSelector)
 
     #
     # Obstacle model (vtkMRMLModelNode)
@@ -129,20 +129,9 @@ class PercutaneousApproachAnalysisWidget:
     self.obstacleModelSelector.showHidden = False
     self.obstacleModelSelector.showChildNodeTypes = False
     self.obstacleModelSelector.setMRMLScene( slicer.mrmlScene )
-    self.obstacleModelSelector.setToolTip( "Pick the input to the algorithm." )
+    self.obstacleModelSelector.setToolTip( "Pick the obstacle model to the algorithm." )
     parametersFormLayout.addRow("Obstacle Model: ", self.obstacleModelSelector)
-
-    ##
-    ## scale factor for Obstacle level
-    ##
-    #self.ObstacleScaleFactorSliderWidget = ctk.ctkSliderWidget()
-    #self.ObstacleScaleFactorSliderWidget.singleStep = 1.0
-    #self.ObstacleScaleFactorSliderWidget.minimum = 1.0
-    #self.ObstacleScaleFactorSliderWidget.maximum = 50.0
-    #self.ObstacleScaleFactorSliderWidget.value = 1.0
-    #self.ObstacleScaleFactorSliderWidget.setToolTip("Set the Obstacle scale.")
-    #parametersFormLayout.addRow("Obstacle scale factor", self.ObstacleScaleFactorSliderWidget)
-    
+   
     #
     # Skin model (vtkMRMLModelNode)
     #
@@ -154,76 +143,100 @@ class PercutaneousApproachAnalysisWidget:
     self.skinModelSelector.showHidden = False
     self.skinModelSelector.showChildNodeTypes = False
     self.skinModelSelector.setMRMLScene( slicer.mrmlScene )
-    self.skinModelSelector.setToolTip( "Pick the input to the algorithm." )
+    self.skinModelSelector.setToolTip( "Pick the skin model to the algorithm." )
     parametersFormLayout.addRow("Skin Model: ", self.skinModelSelector)
-
-    #
-    # Output model (vtkMRMLModelNode)
-    #
-    self.outputModelSelector = slicer.qMRMLNodeComboBox()
-    self.outputModelSelector.nodeTypes = ( ("vtkMRMLModelNode"), "" )
-    self.outputModelSelector.selectNodeUponCreation = False
-    self.outputModelSelector.addEnabled = True
-    self.outputModelSelector.removeEnabled = True
-    self.outputModelSelector.noneEnabled =  True
-    self.outputModelSelector.showHidden = False
-    self.outputModelSelector.showChildNodeTypes = False
-    self.outputModelSelector.setMRMLScene( slicer.mrmlScene )
-    self.outputModelSelector.setToolTip( "Pick the output to the algorithm." )
-    parametersFormLayout.addRow("Output Model: ", self.outputModelSelector)
-
-    ##
-    ## check box to trigger taking screen shots for later use in tutorials
-    ##
-    #self.enableScreenshotsFlagCheckBox = qt.QCheckBox()
-    #self.enableScreenshotsFlagCheckBox.checked = 0
-    #self.enableScreenshotsFlagCheckBox.setToolTip("If checked, take screen shots for tutorials. Use Save Data to write them to disk.")
-    #parametersFormLayout.addRow("Enable Screenshots", self.enableScreenshotsFlagCheckBox)
-
-    ##
-    ## scale factor for screen shots
-    ##
-    self.screenshotScaleFactorSliderWidget = ctk.ctkSliderWidget()
-    self.screenshotScaleFactorSliderWidget.singleStep = 1.0
-    self.screenshotScaleFactorSliderWidget.minimum = 1.0
-    self.screenshotScaleFactorSliderWidget.maximum = 50.0
-    self.screenshotScaleFactorSliderWidget.value = 1.0
-    self.screenshotScaleFactorSliderWidget.setToolTip("Set scale factor for the screen shots.")
-    parametersFormLayout.addRow("Screenshot scale factor", self.screenshotScaleFactorSliderWidget)
 
     #
     # Apply Button
     #
     self.applyButton = qt.QPushButton("Apply")
     self.applyButton.toolTip = "Run the algorithm."
-    self.applyButton.enabled = False
+    self.applyButton.enabled = False    
     parametersFormLayout.addRow(self.applyButton)
 
     # connections
     self.applyButton.connect('clicked(bool)', self.onApplyButton)
     self.targetSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
+    self.targetModelSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
     self.obstacleModelSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
     self.skinModelSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
-    self.outputModelSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
+
+    #
+    # Outcomes Area
+    #
+    outcomesCollapsibleButton = ctk.ctkCollapsibleButton()
+    outcomesCollapsibleButton.text = "Outcomes"
+    self.layout.addWidget(outcomesCollapsibleButton)
+
+    # Layout within the dummy collapsible button
+    outcomesFormLayout = qt.QFormLayout(outcomesCollapsibleButton)
+
+    #
+    # Numbers of skin polygons
+    #
+    self.numbersOfSkinPolygonsSpinBox = ctk.ctkDoubleSpinBox()
+    self.numbersOfSkinPolygonsSpinBox.decimals = 0
+    self.numbersOfSkinPolygonsSpinBox.minimum = 0
+    self.numbersOfSkinPolygonsSpinBox.maximum = 10000000
+    self.numbersOfSkinPolygonsSpinBox.suffix = ""
+    outcomesFormLayout.addRow("Numbers of Skin Polygons: ", self.numbersOfSkinPolygonsSpinBox)
+
+    #
+    # Numbers of approchable polygons
+    #
+    self.numbersOfApproachablePolygonsSpinBox = ctk.ctkDoubleSpinBox()
+    self.numbersOfApproachablePolygonsSpinBox.decimals = 0
+    self.numbersOfApproachablePolygonsSpinBox.minimum = 0
+    self.numbersOfApproachablePolygonsSpinBox.maximum = 10000000
+    self.numbersOfApproachablePolygonsSpinBox.suffix = ""
+    outcomesFormLayout.addRow("Numbers of Approachable Polygons: ", self.numbersOfApproachablePolygonsSpinBox)
+
+    #
+    # Approachable Score
+    #
+    self.approachableScoreSpinBox = ctk.ctkDoubleSpinBox()
+    self.approachableScoreSpinBox.decimals = 2
+    self.approachableScoreSpinBox.minimum = 0
+    self.approachableScoreSpinBox.maximum = 10000000
+    self.approachableScoreSpinBox.suffix = ""
+    outcomesFormLayout.addRow("Approachable Score: ", self.approachableScoreSpinBox)
 
     # Add vertical spacer
     self.layout.addStretch(1)
+
+    # Switch to distinguish between a point target and a target model
+    self.targetSwitch = 0
 
   def cleanup(self):
     pass
 
   def onSelect(self):
-    if (self.targetSelector.currentNode() != None) and (self.obstacleModelSelector.currentNode() != None) and (self.skinModelSelector.currentNode() != None) and (self.outputModelSelector.currentNode() != None):
+    if (self.targetSelector.currentNode() != None) and (self.obstacleModelSelector.currentNode() != None) and (self.skinModelSelector.currentNode() != None):
     	self.applyButton.enabled = True
-  
+    if (self.targetModelSelector.currentNode() != None) and (self.obstacleModelSelector.currentNode() != None) and (self.skinModelSelector.currentNode() != None):
+      self.applyButton.enabled = True
+      self.targetSwitch = 1
+
   def onApplyButton(self):
     logic = PercutaneousApproachAnalysisLogic()
     print("onApplyButton() is called ")
     targetPoint = self.targetSelector.currentNode()
+    targetModel = self.targetModelSelector.currentNode()
     obstacleModel = self.obstacleModelSelector.currentNode()
     skinModel = self.skinModelSelector.currentNode()
-    outputModel = self.outputModelSelector.currentNode()
-    logic.run(targetPoint, obstacleModel, skinModel, outputModel)
+    nPointsReceived, nPathReceived = logic.run(targetPoint, targetModel, self.targetSwitch, obstacleModel, skinModel)
+    
+    # Update outcomes
+    # nPointsReceived equals total numbers of skin model
+    # nPathReceived equals total numbers of approachable points on the skin model
+    self.numbersOfSkinPolygonsSpinBox.value = nPointsReceived
+    self.numbersOfApproachablePolygonsSpinBox.value = nPathReceived
+    self.approachableScoreSpinBox.value = float(float(nPathReceived) / float(nPointsReceived))
+
+    # for debuging
+    print(float(nPointsReceived))
+    print(float(nPathReceived))
+    print(float(float(nPathReceived)/float(nPointsReceived)))
 
   def onReload(self,moduleName="PercutaneousApproachAnalysis"):
     """Generic reload method for any scripted module.
@@ -282,7 +295,6 @@ class PercutaneousApproachAnalysisWidget:
       qt.QMessageBox.warning(slicer.util.mainWindow(), 
           "Reload and Test", 'Exception!\n\n' + str(e) + "\n\nSee Python Console for Stack Trace")
 
-
 #
 # PercutaneousApproachAnalysisLogic
 #
@@ -323,92 +335,145 @@ class PercutaneousApproachAnalysisLogic:
     qt.QTimer.singleShot(msec, self.info.close)
     self.info.exec_()
 
-  def takeScreenshot(self,name,description,type=-1):
-    # show the message even if not taking a screen shot
-    self.delayDisplay(description)
-
-    if self.enableScreenshots == 0:
-      return
-
-    lm = slicer.app.layoutManager()
-    # switch on the type to get the requested window
-    widget = 0
-    if type == -1:
-      # full window
-      widget = slicer.util.mainWindow()
-    elif type == slicer.qMRMLScreenShotDialog().FullLayout:
-      # full layout
-      widget = lm.viewport()
-    elif type == slicer.qMRMLScreenShotDialog().ThreeD:
-      # just the 3D window
-      widget = lm.threeDWidget(0).threeDView()
-    elif type == slicer.qMRMLScreenShotDialog().Red:
-      # red slice window
-      widget = lm.sliceWidget("Red")
-    elif type == slicer.qMRMLScreenShotDialog().Yellow:
-      # yellow slice window
-      widget = lm.sliceWidget("Yellow")
-    elif type == slicer.qMRMLScreenShotDialog().Green:
-      # green slice window
-      widget = lm.sliceWidget("Green")
-
-    # grab and convert to vtk image data
-    qpixMap = qt.QPixmap().grabWidget(widget)
-    qimage = qpixMap.toImage()
-    imageData = vtk.vtkImageData()
-    slicer.qMRMLUtils().qImageToVtkImageData(qimage,imageData)
-
-    annotationLogic = slicer.modules.annotations.logic()
-    annotationLogic.CreateSnapShot(name, description, type, self.screenshotScaleFactor, imageData)
-
-  def run(self, targetPointNode, obstacleModelNode, skinModelNode, outputModelNode):
+  def run(self, targetPointNode, targetModelNode, targetSwitch, obstacleModelNode, skinModelNode):
     """
     Run the actual algorithm
     """
     print ('run() is called')
+
+    import numpy
     
-    tPoint = targetPointNode.GetMarkupPointVector(0, 0)
-    p2 = [tPoint[0], tPoint[1], tPoint[2]]
+    # The variable nPoints represents numbers of polygons for skin model
     poly = skinModelNode.GetPolyData()
     polyDataNormals = vtk.vtkPolyDataNormals()
     polyDataNormals.SetInput(poly)
     polyDataNormals.Update()
     polyData = polyDataNormals.GetOutput()
     nPoints = polyData.GetNumberOfPoints()
+    nPoints2 = nPoints*2
+
+    # The variable nPointsT represents numbers of polygons for target model
+    if targetSwitch == 1:
+      polyT = targetModelNode.GetPolyData()
+      polyTDataNormals = vtk.vtkPolyDataNormals()
+      polyTDataNormals.SetInput(polyT)
+      polyTDataNormals.Update()
+      polyTData = polyTDataNormals.GetOutput()
+      nPointsT = polyTData.GetNumberOfPoints()
+      nPointsT2 = nPointsT*2
+      p2 = [0.0, 0.0, 0.0]
+    else:
+      nPointsT = 1
+      nPointsT2 = nPointsT*2
+      tPoint = targetPointNode.GetMarkupPointVector(0, 0)
+      p2 = [tPoint[0], tPoint[1], tPoint[2]]
+
+    # The variable approachablePoints represents number of approachable polygons on the skin model 
+    approachablePoints = nPointsT*nPoints
+
     p1=[0.0, 0.0, 0.0]
     
     tolerance = 0.001
     t = vtk.mutable(0.0)
-    x = [0.0, 0.0, 0.0]
+    x = [0.0, 0.0, 0.0] # The coordinate of the intersection 
     pcoords = [0.0, 0.0, 0.0]
     subId = vtk.mutable(0)
-        
-
-    pointValue = vtk.vtkDoubleArray()
-    pointValue.SetName("Colors")
-    pointValue.SetNumberOfComponents(1)
-    pointValue.SetNumberOfTuples(nPoints)
-    pointValue.Reset()
 
     bspTree = vtk.vtkModifiedBSPTree()
     bspTree.SetDataSet(obstacleModelNode.GetPolyData())
     bspTree.BuildLocator()
 
-    for index in range(nPoints):
-      polyData.GetPoint(index, p1)
-      iD = bspTree.IntersectWithLine(p1, p2, tolerance, t, x, pcoords, subId)
-      pointValue.InsertValue(index, 50*iD+1)
+    print(float(nPoints))
+    print(float(nPointsT))
 
-    skinModelNode.AddPointScalars(pointValue)
-    skinModelNode.SetActivePointScalars("Colors", vtk.vtkDataSetAttributes.SCALARS)
-    skinModelNode.Modified()
-    displayNode = skinModelNode.GetModelDisplayNode()
-    displayNode.SetActiveScalarName("Colors")
-    displayNode.SetScalarRange(0,100)
+    # Create an array for needle passing points 
+    self.p = numpy.zeros((nPointsT*nPoints2,3))
 
-    return True
+    for indexT in range(0, nPointsT):
+      if targetSwitch == 1:
+        polyTData.GetPoint(indexT, p2)
+      else:
+        p2 = [tPoint[0], tPoint[1], tPoint[2]]
+
+      for index in range(0, nPoints):
+        polyData.GetPoint(index, p1)
+        iD = bspTree.IntersectWithLine(p1, p2, tolerance, t, x, pcoords, subId)
+
+        # Pick up all needle passing points
+        index2 = index*2
+        coord = [p2[0],p2[1],p2[2]]
+        self.p[indexT*nPoints2+index2] = coord
+        approachablePoints = approachablePoints - 1
+
+        if iD == 0: # the case there is an intersection point
+          coord = [p1[0],p1[1],p1[2]]
+          approachablePoints = approachablePoints + 1
+
+        self.p[indexT*nPoints2+index2+1] = coord
+
+        # for debuging
+        #print('p1=[%f, %f, %f]' % (p1[0],p1[1],p1[2]))
+        #print('p2=[%f, %f, %f]' % (p2[0],p2[1],p2[2]))
+        #print('nPoints=%d, index=%d, iD=%d, t=(%f, x=%f, %f, %f)' % (nPoints, index, iD, t, x[0], x[1], x[2]))
+
+    # Create the list for needle passing points to draw virtual god ray 
+    self.path = [self.p[0]]
+    for index2 in range(1, nPointsT*nPoints2):
+      self.path.append(self.p[index2])  
+  
+    # Draw the virtual god ray
+    model = NeedlePathModel(self.path)
+
+    return (nPoints, float(float(approachablePoints)/float(nPointsT)))
+
+# NeedlePathModel class is based on EndoscopyPathModel class for Endoscopy module
+class NeedlePathModel:
+  """Create a vtkPolyData for a polyline:
+       - Add one point per path point.
+       - Add a single polyline
+  """
+  def __init__(self, path):
+  
+    scene = slicer.mrmlScene
     
+    points = vtk.vtkPoints()
+    polyData = vtk.vtkPolyData()
+    polyData.SetPoints(points)
 
+    lines = vtk.vtkCellArray()
+    polyData.SetLines(lines)
+    linesIDArray = lines.GetData()
+    linesIDArray.Reset()
+    linesIDArray.InsertNextTuple1(0)
+
+    polygons = vtk.vtkCellArray()
+    polyData.SetPolys( polygons )
+    idArray = polygons.GetData()
+    idArray.Reset()
+    idArray.InsertNextTuple1(0)
+
+    for point in path:
+      pointIndex = points.InsertNextPoint(*point)
+      linesIDArray.InsertNextTuple1(pointIndex)
+      linesIDArray.SetTuple1( 0, linesIDArray.GetNumberOfTuples() - 1 )
+      lines.SetNumberOfCells(1)
+      
+    # Create model node
+    model = slicer.vtkMRMLModelNode()
+    model.SetScene(scene)
+    model.SetName(scene.GenerateUniqueName("NeedlePaths"))
+    model.SetAndObservePolyData(polyData)
+
+    # Create display node
+    modelDisplay = slicer.vtkMRMLModelDisplayNode()
+    modelDisplay.SetColor(1,1,0) # yellow
+    modelDisplay.SetScene(scene)
+    scene.AddNode(modelDisplay)
+    model.SetAndObserveDisplayNodeID(modelDisplay.GetID())
+
+    # Add to scene
+    modelDisplay.SetInputPolyData(model.GetPolyData())
+    scene.AddNode(model)
 
 class PercutaneousApproachAnalysisTest(unittest.TestCase):
   """

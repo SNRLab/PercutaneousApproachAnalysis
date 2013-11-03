@@ -11,7 +11,7 @@ class PercutaneousApproachAnalysis:
     parent.title = "PercutaneousApproachAnalysis" # TODO make this more human readable by adding spaces
     parent.categories = ["Examples"]
     parent.dependencies = []
-    parent.contributors = ["Junichi Tokuda (Brigham and Women's Hospital), Koichiro Murakami (Shiga University of Medical Science), Atsushi Yamada (Shiga University of Medical Science)"] # replace with "Firstname Lastname (Org)"
+    parent.contributors = ["Atsushi Yamada (Shiga University of Medical Science), Junichi Tokuda (Brigham and Women's Hospital), Koichiro Murakami (Shiga University of Medical Science)"] # replace with "Firstname Lastname (Org)"
     parent.helpText = """
     This is an example of scripted loadable module bundled in an extension.
     """
@@ -50,6 +50,9 @@ class PercutaneousApproachAnalysisWidget:
     if not parent:
       self.setup()
       self.parent.show()
+
+    self.sceneReceived = slicer.mrmlScene
+    self.modelReceived = slicer.vtkMRMLModelNode()
 
   def setup(self):
     # Instantiate and connect widgets ...
@@ -149,7 +152,7 @@ class PercutaneousApproachAnalysisWidget:
     #
     # Apply Button
     #
-    self.applyButton = qt.QPushButton("Apply")
+    self.applyButton = qt.QPushButton("Paths Analysis Start")
     self.applyButton.toolTip = "Run the algorithm."
     self.applyButton.enabled = False    
     parametersFormLayout.addRow(self.applyButton)
@@ -201,6 +204,27 @@ class PercutaneousApproachAnalysisWidget:
     self.approachableScoreSpinBox.suffix = ""
     outcomesFormLayout.addRow("Approachable Score: ", self.approachableScoreSpinBox)
 
+    #
+    # Paths planning Area
+    #
+    pathsplanningCollapsibleButton = ctk.ctkCollapsibleButton()
+    pathsplanningCollapsibleButton.text = "Paths Planning"
+    self.layout.addWidget(pathsplanningCollapsibleButton)
+
+    # Layout within the dummy collapsible button
+    pathPlanningFormLayout = qt.QFormLayout(pathsplanningCollapsibleButton)
+
+    #
+    # Create Paths Button
+    #
+    self.createPathsButton = qt.QPushButton("Create path")
+    self.createPathsButton.toolTip = "Run the algorithm."
+    self.createPathsButton.enabled = True    
+    pathPlanningFormLayout.addRow(self.createPathsButton)
+
+    # connections
+    self.createPathsButton.connect('clicked(bool)', self.onCreatePathsButton)
+
     # Add vertical spacer
     self.layout.addStretch(1)
 
@@ -217,6 +241,16 @@ class PercutaneousApproachAnalysisWidget:
       self.applyButton.enabled = True
       self.targetSwitch = 1
 
+  def onCreatePathsButton(self):
+    logic = PercutaneousApproachAnalysisLogic()
+    print("onCreatePathsButton() is called ")
+    targetPoint = self.targetSelector.currentNode()
+    targetModel = self.targetModelSelector.currentNode()
+    obstacleModel = self.obstacleModelSelector.currentNode()
+    skinModel = self.skinModelSelector.currentNode()
+    #nPointsReceived, nPathReceived = logic.run(targetPoint, targetModel, self.targetSwitch, obstacleModel, skinModel)    
+    logic.removeAction(self.sceneReceived, self.modelReceived)    
+
   def onApplyButton(self):
     logic = PercutaneousApproachAnalysisLogic()
     print("onApplyButton() is called ")
@@ -224,7 +258,7 @@ class PercutaneousApproachAnalysisWidget:
     targetModel = self.targetModelSelector.currentNode()
     obstacleModel = self.obstacleModelSelector.currentNode()
     skinModel = self.skinModelSelector.currentNode()
-    nPointsReceived, nPathReceived = logic.run(targetPoint, targetModel, self.targetSwitch, obstacleModel, skinModel)
+    nPointsReceived, nPathReceived, self.sceneReceived, self.modelReceived= logic.run(targetPoint, targetModel, self.targetSwitch, obstacleModel, skinModel)
     
     # Update outcomes
     # nPointsReceived equals total numbers of skin model
@@ -335,6 +369,12 @@ class PercutaneousApproachAnalysisLogic:
     qt.QTimer.singleShot(msec, self.info.close)
     self.info.exec_()
 
+  def removeAction(self, scene, model):
+    print ('removeAction() is called')
+
+    # Draw the virtual god ray
+    RemovePathModel(scene, model)
+
   def run(self, targetPointNode, targetModelNode, targetSwitch, obstacleModelNode, skinModelNode):
     """
     Run the actual algorithm
@@ -422,9 +462,11 @@ class PercutaneousApproachAnalysisLogic:
       self.path.append(self.p[index2])  
   
     # Draw the virtual god ray
-    model = NeedlePathModel(self.path)
 
-    return (nPoints, float(float(approachablePoints)/float(nPointsT)))
+    #model = NeedlePathModel(self.path)
+    scene, model = NeedlePathModel().run(self.path)
+
+    return (nPoints, float(float(approachablePoints)/float(nPointsT)), scene, model)
 
 # NeedlePathModel class is based on EndoscopyPathModel class for Endoscopy module
 class NeedlePathModel:
@@ -432,8 +474,11 @@ class NeedlePathModel:
        - Add one point per path point.
        - Add a single polyline
   """
-  def __init__(self, path):
-  
+  def __init__(self):
+    pass
+
+  def run(self, path):
+
     scene = slicer.mrmlScene
     
     points = vtk.vtkPoints()
@@ -474,6 +519,13 @@ class NeedlePathModel:
     # Add to scene
     modelDisplay.SetInputPolyData(model.GetPolyData())
     scene.AddNode(model)
+
+    return (scene, model)
+
+class RemovePathModel:
+
+  def __init__(self, scene, model):
+    scene.RemoveNode(model)
 
 class PercutaneousApproachAnalysisTest(unittest.TestCase):
   """

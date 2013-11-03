@@ -371,9 +371,7 @@ class PercutaneousApproachAnalysisLogic:
 
   def removeAction(self, scene, model):
     print ('removeAction() is called')
-
-    # Draw the virtual god ray
-    RemovePathModel(scene, model)
+    scene.RemoveNode(model)
 
   def run(self, targetPointNode, targetModelNode, targetSwitch, obstacleModelNode, skinModelNode):
     """
@@ -521,11 +519,6 @@ class NeedlePathModel:
     scene.AddNode(model)
 
     return (scene, model)
-
-class RemovePathModel:
-
-  def __init__(self, scene, model):
-    scene.RemoveNode(model)
 
 class PercutaneousApproachAnalysisTest(unittest.TestCase):
   """

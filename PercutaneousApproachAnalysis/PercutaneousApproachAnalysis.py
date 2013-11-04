@@ -222,6 +222,13 @@ class PercutaneousApproachAnalysisWidget:
     self.createPathsButton.enabled = True    
     pathPlanningFormLayout.addRow(self.createPathsButton)
 
+  # Frame slider
+    self.frameSlider = ctk.ctkSliderWidget()
+    self.frameSlider.connect('valueChanged(double)', self.frameSliderValueChanged)
+    self.frameSlider.decimals = 0
+    #self.frameSlider.maximum = 1000
+    pathPlanningFormLayout.addRow("Path Candidates:", self.frameSlider)
+
     # connections
     self.createPathsButton.connect('clicked(bool)', self.onCreatePathsButton)
 
@@ -234,6 +241,10 @@ class PercutaneousApproachAnalysisWidget:
   def cleanup(self):
     pass
 
+  def frameSliderValueChanged(self, newValue):
+    print "frameSliderValueChanged:", newValue
+    #self.flyTo(newValue)
+
   def onSelect(self):
     if (self.targetSelector.currentNode() != None) and (self.obstacleModelSelector.currentNode() != None) and (self.skinModelSelector.currentNode() != None):
     	self.applyButton.enabled = True
@@ -244,12 +255,10 @@ class PercutaneousApproachAnalysisWidget:
   def onCreatePathsButton(self):
     logic = PercutaneousApproachAnalysisLogic()
     print("onCreatePathsButton() is called ")
-    targetPoint = self.targetSelector.currentNode()
-    targetModel = self.targetModelSelector.currentNode()
-    obstacleModel = self.obstacleModelSelector.currentNode()
-    skinModel = self.skinModelSelector.currentNode()
-    #nPointsReceived, nPathReceived = logic.run(targetPoint, targetModel, self.targetSwitch, obstacleModel, skinModel)    
+
     logic.removeAction(self.sceneReceived, self.modelReceived)    
+    self.frameSlider.maximum = 5000
+    self.frameSlider.maximum = 3000 
 
   def onApplyButton(self):
     logic = PercutaneousApproachAnalysisLogic()
@@ -372,6 +381,7 @@ class PercutaneousApproachAnalysisLogic:
   def removeAction(self, scene, model):
     print ('removeAction() is called')
     scene.RemoveNode(model)
+    #NeedlePathModel().RemovePathsModel()
 
   def run(self, targetPointNode, targetModelNode, targetSwitch, obstacleModelNode, skinModelNode):
     """
@@ -473,6 +483,8 @@ class NeedlePathModel:
        - Add a single polyline
   """
   def __init__(self):
+    #self.modelStored = slicer.vtkMRMLModelNode()
+    #self.sceneStored = slicer.mrmlScene
     pass
 
   def run(self, path):
@@ -518,7 +530,16 @@ class NeedlePathModel:
     modelDisplay.SetInputPolyData(model.GetPolyData())
     scene.AddNode(model)
 
+    #self.modelStored = model
+    #self.sceneStored = scene
+    #modelStored = model
+    #sceneStored = scene
+
     return (scene, model)
+
+  #def RemovePathsModel(self):
+    #self.sceneStored.RemoveNode(self.modelStored)
+    #sceneStored.RemoveNode(modelStored)
 
 class PercutaneousApproachAnalysisTest(unittest.TestCase):
   """

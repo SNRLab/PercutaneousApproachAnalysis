@@ -257,8 +257,7 @@ class PercutaneousApproachAnalysisWidget:
     print("onCreatePathsButton() is called ")
 
     logic.removeAction(self.sceneReceived, self.modelReceived)    
-    self.frameSlider.maximum = 5000
-    self.frameSlider.maximum = 3000 
+    self.frameSlider.maximum = self.numbersOfApproachablePolygonsSpinBox.value
 
   def onApplyButton(self):
     logic = PercutaneousApproachAnalysisLogic()

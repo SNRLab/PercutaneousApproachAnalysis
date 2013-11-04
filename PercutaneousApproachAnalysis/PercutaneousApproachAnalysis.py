@@ -57,6 +57,8 @@ class PercutaneousApproachAnalysisWidget:
   def setup(self):
     # Instantiate and connect widgets ...
 
+    import numpy
+
     #
     # Reload and Test area
     #
@@ -238,6 +240,14 @@ class PercutaneousApproachAnalysisWidget:
     # Switch to distinguish between a point target and a target model
     self.targetSwitch = 0
 
+    # Create an array for all approachable points
+    # tempolary solution 
+    self.apReceived = numpy.zeros((10000,3))
+    #pTmp = [0.0, 0.0, 0.0]
+    #coordTmp = [pTmp[0],pTmp[1],pTmp[2]]
+    #for numberOfArray in range(0, 10000):
+    #  self.apReceived[numberOfArray] = coordTmp
+
   def cleanup(self):
     pass
 
@@ -268,7 +278,7 @@ class PercutaneousApproachAnalysisWidget:
     targetModel = self.targetModelSelector.currentNode()
     obstacleModel = self.obstacleModelSelector.currentNode()
     skinModel = self.skinModelSelector.currentNode()
-    nPointsReceived, nPathReceived, self.sceneReceived, self.modelReceived= logic.run(targetPoint, targetModel, self.targetSwitch, obstacleModel, skinModel)
+    nPointsReceived, nPathReceived, self.sceneReceived, self.modelReceived, self.apReceived = logic.run(targetPoint, targetModel, self.targetSwitch, obstacleModel, skinModel)
     
     # Update outcomes
     # nPointsReceived equals total numbers of skin model
@@ -472,10 +482,13 @@ class PercutaneousApproachAnalysisLogic:
   
     # Draw the virtual god ray
 
-    #model = NeedlePathModel(self.path)
-    scene, model = NeedlePathModel().run(self.path)
+    # Create an array for all approachable points 
+    pReceived = numpy.zeros((approachablePoints,3))
 
-    return (nPoints, float(float(approachablePoints)/float(nPointsT)), scene, model)
+    #model = NeedlePathModel(self.path)
+    scene, model, pReceived = NeedlePathModel().run(self.path, approachablePoints)
+
+    return (nPoints, float(float(approachablePoints)/float(nPointsT)), scene, model, pReceived)
 
 # NeedlePathModel class is based on EndoscopyPathModel class for Endoscopy module
 class NeedlePathModel:
@@ -488,7 +501,13 @@ class NeedlePathModel:
     #self.sceneStored = slicer.mrmlScene
     pass
 
-  def run(self, path):
+  def run(self, path, approachablePoints):
+
+    import numpy
+
+    # Create an array for all approachable points 
+    p = numpy.zeros((approachablePoints*2,3))
+    p1 = [0.0, 0.0, 0.0]
 
     scene = slicer.mrmlScene
     
@@ -513,12 +532,21 @@ class NeedlePathModel:
       linesIDArray.InsertNextTuple1(pointIndex)
       linesIDArray.SetTuple1( 0, linesIDArray.GetNumberOfTuples() - 1 )
       lines.SetNumberOfCells(1)
-      
+
+      # for debuging to check contents of tuples
       print(pointIndex)
-      print(linesIDArray.GetNumberOfTuples() - 1)
-      print(linesIDArray.GetTuple1(1))
-      print(linesIDArray.GetTuple1(2))
-      print(linesIDArray.GetTuple1(3))
+      print(approachablePoints)
+      #print(linesIDArray.GetTuple1(1))
+      #print(linesIDArray.GetTuple1(2))
+      #print(linesIDArray.GetTuple1(3))
+
+      # Save all approachable points 
+      p1[0] = linesIDArray.GetTuple1(1)
+      p1[1] = linesIDArray.GetTuple1(2)
+      p1[2] = linesIDArray.GetTuple1(3)
+
+      coord = [p1[0], p1[1], p1[2]]
+      p[pointIndex] = coord
 
     # Create model node
     model = slicer.vtkMRMLModelNode()
@@ -537,7 +565,7 @@ class NeedlePathModel:
     modelDisplay.SetInputPolyData(model.GetPolyData())
     scene.AddNode(model)
 
-    return (scene, model)
+    return (scene, model, p)
 
 class PercutaneousApproachAnalysisTest(unittest.TestCase):
   """

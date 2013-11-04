@@ -256,7 +256,9 @@ class PercutaneousApproachAnalysisWidget:
     logic = PercutaneousApproachAnalysisLogic()
     print("onCreatePathsButton() is called ")
 
-    logic.removeAction(self.sceneReceived, self.modelReceived)    
+    # Remove VTK model
+    logic.removeAction(self.sceneReceived, self.modelReceived)
+    # Change the range of the Slider based on the numbers of approachable polygons    
     self.frameSlider.maximum = self.numbersOfApproachablePolygonsSpinBox.value
 
   def onApplyButton(self):
@@ -512,6 +514,12 @@ class NeedlePathModel:
       linesIDArray.SetTuple1( 0, linesIDArray.GetNumberOfTuples() - 1 )
       lines.SetNumberOfCells(1)
       
+      print(pointIndex)
+      print(linesIDArray.GetNumberOfTuples() - 1)
+      print(linesIDArray.GetTuple1(1))
+      print(linesIDArray.GetTuple1(2))
+      print(linesIDArray.GetTuple1(3))
+
     # Create model node
     model = slicer.vtkMRMLModelNode()
     model.SetScene(scene)
@@ -529,16 +537,7 @@ class NeedlePathModel:
     modelDisplay.SetInputPolyData(model.GetPolyData())
     scene.AddNode(model)
 
-    #self.modelStored = model
-    #self.sceneStored = scene
-    #modelStored = model
-    #sceneStored = scene
-
     return (scene, model)
-
-  #def RemovePathsModel(self):
-    #self.sceneStored.RemoveNode(self.modelStored)
-    #sceneStored.RemoveNode(modelStored)
 
 class PercutaneousApproachAnalysisTest(unittest.TestCase):
   """

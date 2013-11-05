@@ -242,18 +242,49 @@ class PercutaneousApproachAnalysisWidget:
 
     # Create an array for all approachable points
     # tempolary solution 
-    self.apReceived = numpy.zeros((10000,3))
-    #pTmp = [0.0, 0.0, 0.0]
-    #coordTmp = [pTmp[0],pTmp[1],pTmp[2]]
-    #for numberOfArray in range(0, 10000):
-    #  self.apReceived[numberOfArray] = coordTmp
+    self.apReceived = numpy.zeros([10000,3])
+
+    self.nPointsReceived = 0
+    self.nPathReceived = 0
+
+    self.frameSliderValue = 0
 
   def cleanup(self):
     pass
 
   def frameSliderValueChanged(self, newValue):
     print "frameSliderValueChanged:", newValue
-    #self.flyTo(newValue)
+    self.frameSliderValue = newValue
+    #self.onCreatePathsButton()
+    import numpy
+    
+    logic = PercutaneousApproachAnalysisLogic()
+    print("onCreatePathsButton() is called ")
+
+    #self.onCreatePathsButton()
+
+    # Remove VTK model
+    #logic.removeAction(self.sceneReceived, self.modelReceived)
+    # Change the range of the Slider based on the numbers of approachable polygons    
+    ##self.frameSlider.maximum = self.numbersOfApproachablePolygonsSpinBox.value
+
+    # for debuging
+    """ 
+    # test to indicate one candidate for needle paths
+    tipPoint = numpy.zeros([2,3])
+    targetP = [self.apReceived[self.frameSliderValue*2][0], self.apReceived[self.frameSliderValue*2][1], self.apReceived[self.frameSliderValue*2][2]]
+    aSkinP = [self.apReceived[self.frameSliderValue*2+1][0], self.apReceived[self.frameSliderValue*2+1][1], self.apReceived[self.frameSliderValue*2+1][2]]
+    tipPoint[0] = targetP
+    tipPoint[1] = aSkinP
+
+    onePath = [tipPoint[0]]
+    onePath.append(tipPoint[1])
+   
+    print(onePath)
+    
+    # Create the list for needle passing points to draw virtual god ray 
+    self.sceneReceived, self.modelReceived, pReceived = NeedlePathModel().run(onePath, 2) # target point and a point on skin 
+    """
 
   def onSelect(self):
     if (self.targetSelector.currentNode() != None) and (self.obstacleModelSelector.currentNode() != None) and (self.skinModelSelector.currentNode() != None):
@@ -263,6 +294,9 @@ class PercutaneousApproachAnalysisWidget:
       self.targetSwitch = 1
 
   def onCreatePathsButton(self):
+
+    import numpy
+
     logic = PercutaneousApproachAnalysisLogic()
     print("onCreatePathsButton() is called ")
 
@@ -271,6 +305,38 @@ class PercutaneousApproachAnalysisWidget:
     # Change the range of the Slider based on the numbers of approachable polygons    
     self.frameSlider.maximum = self.numbersOfApproachablePolygonsSpinBox.value
 
+    # for debuging
+
+    #print(self.apReceived)
+
+    # for debuging. -> it's ok. (11/5/2013)
+    ppp = [0.0, 0.0, 0.0]
+    """
+    for number in range(0,self.nPointsReceived*2):
+      #print(self.apReceived[number*4])
+      #print(number*4+1)
+      print(self.apReceived[number][0])
+      print(self.apReceived[number][1])
+      print(self.apReceived[number][2])
+    """
+
+    # test to indicate one candidate for needle paths
+    tipPoint = numpy.zeros([2,3])
+
+    targetP = [self.apReceived[self.frameSliderValue*2][0], self.apReceived[self.frameSliderValue*2][1], self.apReceived[self.frameSliderValue*2][2]]
+    aSkinP = [self.apReceived[self.frameSliderValue*2+1][0], self.apReceived[self.frameSliderValue*2+1][1], self.apReceived[self.frameSliderValue*2+1][2]]
+    tipPoint[0] = targetP
+    tipPoint[1] = aSkinP
+
+    onePath = [tipPoint[0]]
+    onePath.append(tipPoint[1])
+
+    print(onePath)
+
+    # Create the list for needle passing points to draw virtual god ray 
+    #scene, model, pReceived = NeedlePathModel().run(onePath, 2) # target point and a point on skin
+    self.sceneReceived, self.modelReceived, pReceived = NeedlePathModel().run(onePath, 2) # target point and a point on skin
+
   def onApplyButton(self):
     logic = PercutaneousApproachAnalysisLogic()
     print("onApplyButton() is called ")
@@ -278,19 +344,20 @@ class PercutaneousApproachAnalysisWidget:
     targetModel = self.targetModelSelector.currentNode()
     obstacleModel = self.obstacleModelSelector.currentNode()
     skinModel = self.skinModelSelector.currentNode()
-    nPointsReceived, nPathReceived, self.sceneReceived, self.modelReceived, self.apReceived = logic.run(targetPoint, targetModel, self.targetSwitch, obstacleModel, skinModel)
+    self.nPointsReceived, self.nPathReceived, self.sceneReceived, self.modelReceived, self.apReceived = logic.run(targetPoint, targetModel, self.targetSwitch, obstacleModel, skinModel)
     
     # Update outcomes
     # nPointsReceived equals total numbers of skin model
     # nPathReceived equals total numbers of approachable points on the skin model
-    self.numbersOfSkinPolygonsSpinBox.value = nPointsReceived
-    self.numbersOfApproachablePolygonsSpinBox.value = nPathReceived
-    self.approachableScoreSpinBox.value = float(float(nPathReceived) / float(nPointsReceived))
+    self.numbersOfSkinPolygonsSpinBox.value = self.nPointsReceived
+    self.numbersOfApproachablePolygonsSpinBox.value = self.nPathReceived
+    self.approachableScoreSpinBox.value = float(float(self.nPathReceived) / float(self.nPointsReceived))
 
     # for debuging
-    print(float(nPointsReceived))
-    print(float(nPathReceived))
-    print(float(float(nPathReceived)/float(nPointsReceived)))
+    print(float(self.nPointsReceived))
+    print(float(self.nPathReceived))
+    print(float(float(self.nPathReceived)/float(self.nPointsReceived)))
+    print(self.apReceived)
 
   def onReload(self,moduleName="PercutaneousApproachAnalysis"):
     """Generic reload method for any scripted module.
@@ -442,11 +509,11 @@ class PercutaneousApproachAnalysisLogic:
     bspTree.SetDataSet(obstacleModelNode.GetPolyData())
     bspTree.BuildLocator()
 
-    print(float(nPoints))
-    print(float(nPointsT))
+    #print(float(nPoints))
+    #print(float(nPointsT))
 
     # Create an array for needle passing points 
-    self.p = numpy.zeros((nPointsT*nPoints2,3))
+    self.p = numpy.zeros([nPointsT*nPoints2,3])
 
     for indexT in range(0, nPointsT):
       if targetSwitch == 1:
@@ -464,12 +531,13 @@ class PercutaneousApproachAnalysisLogic:
         self.p[indexT*nPoints2+index2] = coord
         approachablePoints = approachablePoints - 1
 
-        if iD == 0: # the case there is an intersection point
+        if iD == 0: # the case there is no intersection point
           coord = [p1[0],p1[1],p1[2]]
           approachablePoints = approachablePoints + 1
 
         self.p[indexT*nPoints2+index2+1] = coord
 
+        #print(coord)
         # for debuging
         #print('p1=[%f, %f, %f]' % (p1[0],p1[1],p1[2]))
         #print('p2=[%f, %f, %f]' % (p2[0],p2[1],p2[2]))
@@ -480,15 +548,17 @@ class PercutaneousApproachAnalysisLogic:
     for index2 in range(1, nPointsT*nPoints2):
       self.path.append(self.p[index2])  
   
+    print(self.path)
     # Draw the virtual god ray
 
     # Create an array for all approachable points 
-    pReceived = numpy.zeros((approachablePoints,3))
+    pReceived = numpy.zeros([approachablePoints,3])
 
     #model = NeedlePathModel(self.path)
     scene, model, pReceived = NeedlePathModel().run(self.path, approachablePoints)
 
-    return (nPoints, float(float(approachablePoints)/float(nPointsT)), scene, model, pReceived)
+    #return (nPoints, float(float(approachablePoints)/float(nPointsT)), scene, model, pReceived)
+    return (nPoints, float(float(approachablePoints)/float(nPointsT)), scene, model, self.p)
 
 # NeedlePathModel class is based on EndoscopyPathModel class for Endoscopy module
 class NeedlePathModel:
@@ -506,7 +576,7 @@ class NeedlePathModel:
     import numpy
 
     # Create an array for all approachable points 
-    p = numpy.zeros((approachablePoints*2,3))
+    p = numpy.zeros([approachablePoints*2,3])
     p1 = [0.0, 0.0, 0.0]
 
     scene = slicer.mrmlScene
@@ -534,11 +604,11 @@ class NeedlePathModel:
       lines.SetNumberOfCells(1)
 
       # for debuging to check contents of tuples
-      print(pointIndex)
-      print(approachablePoints)
-      #print(linesIDArray.GetTuple1(1))
-      #print(linesIDArray.GetTuple1(2))
-      #print(linesIDArray.GetTuple1(3))
+      #print(pointIndex)
+      #print(approachablePoints)
+      ##print(linesIDArray.GetTuple1(1))
+      ##print(linesIDArray.GetTuple1(2))
+      ##print(linesIDArray.GetTuple1(3))
 
       # Save all approachable points 
       p1[0] = linesIDArray.GetTuple1(1)
@@ -547,6 +617,8 @@ class NeedlePathModel:
 
       coord = [p1[0], p1[1], p1[2]]
       p[pointIndex] = coord
+
+      #print(coord)
 
     # Create model node
     model = slicer.vtkMRMLModelNode()

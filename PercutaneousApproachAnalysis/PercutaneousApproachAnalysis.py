@@ -157,21 +157,6 @@ class PercutaneousApproachAnalysisWidget:
     self.skinModelSelector.setToolTip( "Pick the input to the algorithm." )
     parametersFormLayout.addRow("Skin Model: ", self.skinModelSelector)
 
-    #
-    # Output model (vtkMRMLModelNode)
-    #
-    self.outputModelSelector = slicer.qMRMLNodeComboBox()
-    self.outputModelSelector.nodeTypes = ( ("vtkMRMLModelNode"), "" )
-    self.outputModelSelector.selectNodeUponCreation = False
-    self.outputModelSelector.addEnabled = True
-    self.outputModelSelector.removeEnabled = True
-    self.outputModelSelector.noneEnabled =  True
-    self.outputModelSelector.showHidden = False
-    self.outputModelSelector.showChildNodeTypes = False
-    self.outputModelSelector.setMRMLScene( slicer.mrmlScene )
-    self.outputModelSelector.setToolTip( "Pick the output to the algorithm." )
-    parametersFormLayout.addRow("Output Model: ", self.outputModelSelector)
-
     ##
     ## check box to trigger taking screen shots for later use in tutorials
     ##
@@ -204,7 +189,6 @@ class PercutaneousApproachAnalysisWidget:
     self.targetSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
     self.obstacleModelSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
     self.skinModelSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
-    self.outputModelSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
 
     # Add vertical spacer
     self.layout.addStretch(1)
@@ -213,7 +197,7 @@ class PercutaneousApproachAnalysisWidget:
     pass
 
   def onSelect(self):
-    if (self.targetSelector.currentNode() != None) and (self.obstacleModelSelector.currentNode() != None) and (self.skinModelSelector.currentNode() != None) and (self.outputModelSelector.currentNode() != None):
+    if (self.targetSelector.currentNode() != None) and (self.obstacleModelSelector.currentNode() != None) and (self.skinModelSelector.currentNode() != None):
     	self.applyButton.enabled = True
   
   def onApplyButton(self):
@@ -222,8 +206,7 @@ class PercutaneousApproachAnalysisWidget:
     targetPoint = self.targetSelector.currentNode()
     obstacleModel = self.obstacleModelSelector.currentNode()
     skinModel = self.skinModelSelector.currentNode()
-    outputModel = self.outputModelSelector.currentNode()
-    logic.run(targetPoint, obstacleModel, skinModel, outputModel)
+    logic.run(targetPoint, obstacleModel, skinModel)
 
   def onReload(self,moduleName="PercutaneousApproachAnalysis"):
     """Generic reload method for any scripted module.
@@ -361,43 +344,79 @@ class PercutaneousApproachAnalysisLogic:
     annotationLogic = slicer.modules.annotations.logic()
     annotationLogic.CreateSnapShot(name, description, type, self.screenshotScaleFactor, imageData)
 
-  def run(self, targetPointNode, obstacleModelNode, skinModelNode, outputModelNode):
+  def run(self, targetPointNode, obstacleModelNode, skinModelNode):
     """
     Run the actual algorithm
     """
     print ('run() is called')
     
     tPoint = targetPointNode.GetMarkupPointVector(0, 0)
-    p2 = [tPoint[0], tPoint[1], tPoint[2]]
+    pTarget = [tPoint[0], tPoint[1], tPoint[2]]
     poly = skinModelNode.GetPolyData()
     polyDataNormals = vtk.vtkPolyDataNormals()
     polyDataNormals.SetInput(poly)
+    polyDataNormals.ComputeCellNormalsOn()
     polyDataNormals.Update()
     polyData = polyDataNormals.GetOutput()
     nPoints = polyData.GetNumberOfPoints()
-    p1=[0.0, 0.0, 0.0]
+    nCells = polyData.GetNumberOfCells()
+    pSurface=[0.0, 0.0, 0.0]
     
     tolerance = 0.001
     t = vtk.mutable(0.0)
     x = [0.0, 0.0, 0.0]
     pcoords = [0.0, 0.0, 0.0]
     subId = vtk.mutable(0)
-        
 
+    print ("nPoints = %d" % (nPoints))
+    print ("nCells = %d" % (nCells))
+
+    # Map surface model
     pointValue = vtk.vtkDoubleArray()
     pointValue.SetName("Colors")
     pointValue.SetNumberOfComponents(1)
     pointValue.SetNumberOfTuples(nPoints)
     pointValue.Reset()
-
+    pointValue.FillComponent(0,0.0);
+    
     bspTree = vtk.vtkModifiedBSPTree()
     bspTree.SetDataSet(obstacleModelNode.GetPolyData())
     bspTree.BuildLocator()
 
-    for index in range(nPoints):
-      polyData.GetPoint(index, p1)
-      iD = bspTree.IntersectWithLine(p1, p2, tolerance, t, x, pcoords, subId)
-      pointValue.InsertValue(index, 50*iD+1)
+    cp0=[0.0, 0.0, 0.0]
+    cp1=[0.0, 0.0, 0.0]
+    cp2=[0.0, 0.0, 0.0]
+
+    accessibleArea = 0.0
+    inaccessibleArea = 0.0
+
+    ids=vtk.vtkIdList()
+
+    for index in range(nCells):
+      cell = polyData.GetCell(index)
+      if cell.GetCellType() == vtk.VTK_TRIANGLE:
+        area = cell.ComputeArea()
+        polyData.GetCellPoints(index, ids)
+        polyData.GetPoint(ids.GetId(0), cp0)
+        polyData.GetPoint(ids.GetId(1), cp1)
+        polyData.GetPoint(ids.GetId(2), cp2)
+        vtk.vtkTriangle.TriangleCenter(cp0, cp1, cp2, pSurface)
+        iD = bspTree.IntersectWithLine(pSurface, pTarget, tolerance, t, x, pcoords, subId)
+        if iD > 0:
+          v = 50*iD+1
+          pointValue.InsertValue(ids.GetId(0), v)
+          pointValue.InsertValue(ids.GetId(1), v)
+          pointValue.InsertValue(ids.GetId(2), v)
+          inaccessibleArea = inaccessibleArea + area
+        else:
+          accessibleArea = accessibleArea + area
+
+      else:
+        print ("ERROR: Non-triangular cell.")
+
+    
+    score = accessibleArea / (inaccessibleArea + inaccessibleArea)
+    print ("Approach Score (<accessible area> / (<accessible area> + <inaccessible area>)) = %f" % (score))
 
     skinModelNode.AddPointScalars(pointValue)
     skinModelNode.SetActivePointScalars("Colors", vtk.vtkDataSetAttributes.SCALARS)
@@ -408,7 +427,6 @@ class PercutaneousApproachAnalysisLogic:
 
     return True
     
-
 
 class PercutaneousApproachAnalysisTest(unittest.TestCase):
   """

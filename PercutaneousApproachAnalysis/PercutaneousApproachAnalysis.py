@@ -224,11 +224,10 @@ class PercutaneousApproachAnalysisWidget:
     self.createPathsButton.enabled = True    
     pathPlanningFormLayout.addRow(self.createPathsButton)
 
-  # Frame slider
+    # Frame slider
     self.frameSlider = ctk.ctkSliderWidget()
     self.frameSlider.connect('valueChanged(double)', self.frameSliderValueChanged)
     self.frameSlider.decimals = 0
-    #self.frameSlider.maximum = 1000
     pathPlanningFormLayout.addRow("Path Candidates:", self.frameSlider)
 
     # connections
@@ -243,48 +242,26 @@ class PercutaneousApproachAnalysisWidget:
     # Create an array for all approachable points
     # tempolary solution 
     self.apReceived = numpy.zeros([10000,3])
-
+  
     self.nPointsReceived = 0
     self.nPathReceived = 0
-
     self.frameSliderValue = 0
+
+    # avoid initializing error for frameSliderValueChanged(self, newValue) function
+    self.tmpSwitch = 0
 
   def cleanup(self):
     pass
 
   def frameSliderValueChanged(self, newValue):
-    print "frameSliderValueChanged:", newValue
-    self.frameSliderValue = newValue
-    #self.onCreatePathsButton()
+
     import numpy
-    
-    logic = PercutaneousApproachAnalysisLogic()
-    print("onCreatePathsButton() is called ")
 
-    #self.onCreatePathsButton()
-
-    # Remove VTK model
-    #logic.removeAction(self.sceneReceived, self.modelReceived)
-    # Change the range of the Slider based on the numbers of approachable polygons    
-    ##self.frameSlider.maximum = self.numbersOfApproachablePolygonsSpinBox.value
-
-    # for debuging
-    """ 
-    # test to indicate one candidate for needle paths
-    tipPoint = numpy.zeros([2,3])
-    targetP = [self.apReceived[self.frameSliderValue*2][0], self.apReceived[self.frameSliderValue*2][1], self.apReceived[self.frameSliderValue*2][2]]
-    aSkinP = [self.apReceived[self.frameSliderValue*2+1][0], self.apReceived[self.frameSliderValue*2+1][1], self.apReceived[self.frameSliderValue*2+1][2]]
-    tipPoint[0] = targetP
-    tipPoint[1] = aSkinP
-
-    onePath = [tipPoint[0]]
-    onePath.append(tipPoint[1])
-   
-    print(onePath)
-    
-    # Create the list for needle passing points to draw virtual god ray 
-    self.sceneReceived, self.modelReceived, pReceived = NeedlePathModel().run(onePath, 2) # target point and a point on skin 
-    """
+    #print "frameSliderValueChanged:", newValue
+    self.frameSliderValue = newValue
+ 
+    if self.tmpSwitch == 1:
+      self.onCreatePathsButton()
 
   def onSelect(self):
     if (self.targetSelector.currentNode() != None) and (self.obstacleModelSelector.currentNode() != None) and (self.skinModelSelector.currentNode() != None):
@@ -302,11 +279,11 @@ class PercutaneousApproachAnalysisWidget:
 
     # Remove VTK model
     logic.removeAction(self.sceneReceived, self.modelReceived)
+    
     # Change the range of the Slider based on the numbers of approachable polygons    
     self.frameSlider.maximum = self.numbersOfApproachablePolygonsSpinBox.value
 
     # for debuging
-
     #print(self.apReceived)
 
     # for debuging. -> it's ok. (11/5/2013)
@@ -327,15 +304,15 @@ class PercutaneousApproachAnalysisWidget:
     aSkinP = [self.apReceived[self.frameSliderValue*2+1][0], self.apReceived[self.frameSliderValue*2+1][1], self.apReceived[self.frameSliderValue*2+1][2]]
     tipPoint[0] = targetP
     tipPoint[1] = aSkinP
-
     onePath = [tipPoint[0]]
     onePath.append(tipPoint[1])
 
-    print(onePath)
+    #print(onePath)
 
     # Create the list for needle passing points to draw virtual god ray 
-    #scene, model, pReceived = NeedlePathModel().run(onePath, 2) # target point and a point on skin
-    self.sceneReceived, self.modelReceived, pReceived = NeedlePathModel().run(onePath, 2) # target point and a point on skin
+    # target point and a point on skin
+    self.sceneReceived, self.modelReceived, pReceived = NeedlePathModel().run(onePath, 2)
+    self.tmpSwitch = 1
 
   def onApplyButton(self):
     logic = PercutaneousApproachAnalysisLogic()
@@ -344,6 +321,7 @@ class PercutaneousApproachAnalysisWidget:
     targetModel = self.targetModelSelector.currentNode()
     obstacleModel = self.obstacleModelSelector.currentNode()
     skinModel = self.skinModelSelector.currentNode()
+    
     self.nPointsReceived, self.nPathReceived, self.sceneReceived, self.modelReceived, self.apReceived = logic.run(targetPoint, targetModel, self.targetSwitch, obstacleModel, skinModel)
     
     # Update outcomes

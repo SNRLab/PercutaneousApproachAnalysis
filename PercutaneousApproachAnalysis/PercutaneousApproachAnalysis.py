@@ -415,7 +415,7 @@ class PercutaneousApproachAnalysisLogic:
         print ("ERROR: Non-triangular cell.")
 
     
-    score = accessibleArea / (inaccessibleArea + inaccessibleArea)
+    score = accessibleArea / (accessibleArea + inaccessibleArea)
     print ("Approach Score (<accessible area> / (<accessible area> + <inaccessible area>)) = %f" % (score))
 
     skinModelNode.AddPointScalars(pointValue)

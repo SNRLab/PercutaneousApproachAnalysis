@@ -64,7 +64,7 @@ class PercutaneousApproachAnalysisWidget:
     #
     reloadCollapsibleButton = ctk.ctkCollapsibleButton()
     reloadCollapsibleButton.text = "Reload && Test"
-    reloadCollapsibleButton.collapsed = True
+    #reloadCollapsibleButton.collapsed = True
     self.layout.addWidget(reloadCollapsibleButton)
     reloadFormLayout = qt.QFormLayout(reloadCollapsibleButton)
 
@@ -121,7 +121,7 @@ class PercutaneousApproachAnalysisWidget:
     self.targetModelSelector.showChildNodeTypes = False
     self.targetModelSelector.setMRMLScene( slicer.mrmlScene )
     self.targetModelSelector.setToolTip( "Pick the target model to the algorithm." )
-    parametersFormLayout.addRow("Target Model: ", self.targetModelSelector)
+    #parametersFormLayout.addRow("Target Model: ", self.targetModelSelector)
 
     #
     # Obstacle model (vtkMRMLModelNode)
@@ -150,6 +150,21 @@ class PercutaneousApproachAnalysisWidget:
     self.skinModelSelector.setMRMLScene( slicer.mrmlScene )
     self.skinModelSelector.setToolTip( "Pick the skin model to the algorithm." )
     parametersFormLayout.addRow("Skin Model: ", self.skinModelSelector)
+
+    #
+    # Entry point list (vtkMRMLMarkupsFiducialNode)
+    #
+    self.entryPointsSelector = slicer.qMRMLNodeComboBox()
+    self.entryPointsSelector.nodeTypes = ( ("vtkMRMLMarkupsFiducialNode"), "" )
+    self.entryPointsSelector.addEnabled = False
+    self.entryPointsSelector.removeEnabled = False
+    self.entryPointsSelector.noneEnabled = True
+    self.entryPointsSelector.showHidden = False
+    self.entryPointsSelector.showChildNodeTypes = False
+    self.entryPointsSelector.setMRMLScene( slicer.mrmlScene )
+    #self.entryPointsSelector.setToolTip( "Pick up the target point" )
+    parametersFormLayout.addRow("Output Fiducial List: ", self.entryPointsSelector)
+
 
     #
     # Apply Button
@@ -184,7 +199,7 @@ class PercutaneousApproachAnalysisWidget:
     self.numbersOfSkinPolygonsSpinBox.minimum = 0
     self.numbersOfSkinPolygonsSpinBox.maximum = 10000000
     self.numbersOfSkinPolygonsSpinBox.suffix = ""
-    outcomesFormLayout.addRow("Numbers of Skin Polygons: ", self.numbersOfSkinPolygonsSpinBox)
+    #outcomesFormLayout.addRow("Numbers of Skin Polygons: ", self.numbersOfSkinPolygonsSpinBox)
 
     #
     # Numbers of approchable polygons
@@ -194,7 +209,7 @@ class PercutaneousApproachAnalysisWidget:
     self.numbersOfApproachablePolygonsSpinBox.minimum = 0
     self.numbersOfApproachablePolygonsSpinBox.maximum = 10000000
     self.numbersOfApproachablePolygonsSpinBox.suffix = ""
-    outcomesFormLayout.addRow("Numbers of Approachable Polygons: ", self.numbersOfApproachablePolygonsSpinBox)
+    #outcomesFormLayout.addRow("Numbers of Approachable Polygons: ", self.numbersOfApproachablePolygonsSpinBox)
 
     #
     # Approachable Score
@@ -204,7 +219,97 @@ class PercutaneousApproachAnalysisWidget:
     self.approachableScoreSpinBox.minimum = 0
     self.approachableScoreSpinBox.maximum = 10000000
     self.approachableScoreSpinBox.suffix = ""
-    outcomesFormLayout.addRow("Approachable Score: ", self.approachableScoreSpinBox)
+    #outcomesFormLayout.addRow("Approachable Score: ", self.approachableScoreSpinBox)
+
+    #
+    # Check box for displaying all paths
+    #
+    self.approachableSkinMapCheckBox = ctk.ctkCheckBox()
+    self.approachableSkinMapCheckBox.text = "Show Approachable Skin Map:"
+    outcomesFormLayout.addRow(self.approachableSkinMapCheckBox)
+
+    #
+    # Check box for displaying all paths
+    #
+    self.allPathsCheckBox = ctk.ctkCheckBox()
+    self.allPathsCheckBox.text = "Show All Paths:"
+    outcomesFormLayout.addRow(self.allPathsCheckBox)
+
+    #
+    # Numbers of approchable polygons
+    #
+    self.numbersOfAllpathsSpinBox = ctk.ctkDoubleSpinBox()
+    self.numbersOfAllpathsSpinBox.decimals = 0
+    self.numbersOfAllpathsSpinBox.minimum = 0
+    self.numbersOfAllpathsSpinBox.maximum = 10000000
+    self.numbersOfAllpathsSpinBox.suffix = ""
+    outcomesFormLayout.addRow("      Numbers of All Paths: ", self.numbersOfAllpathsSpinBox)
+
+    #
+    # Check box for displaying each path
+    #
+    self.maximumLengthPathCheckBox = ctk.ctkCheckBox()
+    self.maximumLengthPathCheckBox.text = "Show Maximum Length Path:"
+    outcomesFormLayout.addRow(self.maximumLengthPathCheckBox)
+
+    #
+    # Check box for displaying each path
+    #
+    self.minimumLengthPathCheckBox = ctk.ctkCheckBox()
+    self.minimumLengthPathCheckBox.text = "Show Minimum Length Path:"
+    outcomesFormLayout.addRow(self.minimumLengthPathCheckBox)
+
+    #
+    # Check box for displaying each path
+    #
+    self.safestPathCheckBox = ctk.ctkCheckBox()
+    self.safestPathCheckBox.text = "Show Safest Path:"
+    outcomesFormLayout.addRow(self.safestPathCheckBox)
+
+    #
+    # Check box for displaying each path
+    #
+    self.worstPathCheckBox = ctk.ctkCheckBox()
+    self.worstPathCheckBox.text = "Show Worst Path:"
+    outcomesFormLayout.addRow(self.worstPathCheckBox)
+
+    #
+    # Check box for displaying each path
+    #
+    self.candidatePathCheckBox = ctk.ctkCheckBox()
+    self.candidatePathCheckBox.text = "Show Path Candidate:"
+    outcomesFormLayout.addRow(self.candidatePathCheckBox)
+
+    # Path slider
+    self.pathSlider = ctk.ctkSliderWidget()
+    #self.pathSlider.connect('valueChanged(double)', self.pathSliderValueChanged)
+    self.pathSlider.decimals = 0
+    outcomesFormLayout.addRow("      Path Candidates:", self.pathSlider)
+
+    # create path and skin button
+    self.createSkinPointButton = qt.QPushButton("Create Path and Skin Point")
+    #self.createSkinPointButton.toolTip = "Reload this module."
+    #self.createSkinPointButton.name = "PercutaneousApproachAnalysis Reload"
+    outcomesFormLayout.addRow("      Skin Point:", self.createSkinPointButton)
+
+    # Point slider
+    self.pointSlider = ctk.ctkSliderWidget()
+    #self.pathSlider.connect('valueChanged(double)', self.pathSliderValueChanged)
+    self.pointSlider.decimals = 0
+    outcomesFormLayout.addRow("      Point Candidates on the Path:", self.pointSlider)
+
+    # create point on the path
+    self.createPointOnThePathButton = qt.QPushButton("Create Point on the Path")
+    #self.createSkinPointButton.toolTip = "Reload this module."
+    #self.createSkinPointButton.name = "PercutaneousApproachAnalysis Reload"
+    outcomesFormLayout.addRow("      Point on the Path:", self.createPointOnThePathButton)
+
+    #
+    # Check box for displaying all paths
+    #
+    #self.allPathsCheckBox2 = ctk.ctkCheckBox()
+    #self.allPathsCheckBox2.text = "Show All Paths"
+    #outcomesFormLayout.addRow("Show All Paths: ", self.allPathsCheckBox2)
 
     #
     # Paths planning Area
@@ -603,6 +708,16 @@ class NeedlePathModel:
     model.SetScene(scene)
     model.SetName(scene.GenerateUniqueName("NeedlePaths"))
     model.SetAndObservePolyData(polyData)
+
+    # Create model node
+    point = slicer.vtkMRMLMarkupsFiducialNode()
+    n = point.AddFiducial(4.0, 5.5, -6.0)
+    point.SetNthFiducialLabel(n, "FiducialTest")
+    idl = point.GetNthMarkupID(n)
+    point.SetNthFiducialVisibility(n,0)
+    #point.SetScene(scene)
+    #point.SetName(scene.GenerateUniqueName("FiducialTest"))
+    #point.SetAndObservePolyData(polyData)
 
     # Create display node
     modelDisplay = slicer.vtkMRMLModelDisplayNode()

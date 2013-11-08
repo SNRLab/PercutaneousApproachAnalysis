@@ -102,6 +102,20 @@ class PercutaneousApproachAnalysisWidget:
     self.targetSelector.setToolTip( "Pick up the target point" )
     parametersFormLayout.addRow("Target Point: ", self.targetSelector)
 
+    #
+    # target model (vtkMRMLModelNode)
+    #
+    self.targetModelSelector = slicer.qMRMLNodeComboBox()
+    self.targetModelSelector.nodeTypes = ( ("vtkMRMLModelNode"), "" )
+    self.targetModelSelector.addEnabled = False
+    self.targetModelSelector.removeEnabled = False
+    self.targetModelSelector.noneEnabled =  True
+    self.targetModelSelector.showHidden = False
+    self.targetModelSelector.showChildNodeTypes = False
+    self.targetModelSelector.setMRMLScene( slicer.mrmlScene )
+    self.targetModelSelector.setToolTip( "Pick the target model to the algorithm." )
+    parametersFormLayout.addRow("Target Model: ", self.targetModelSelector)
+
     ##
     ## output volume selector
     ##

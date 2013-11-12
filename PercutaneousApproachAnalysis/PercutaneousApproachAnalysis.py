@@ -182,13 +182,13 @@ class PercutaneousApproachAnalysisWidget:
     ##
     ## scale factor for screen shots
     ##
-    self.screenshotScaleFactorSliderWidget = ctk.ctkSliderWidget()
-    self.screenshotScaleFactorSliderWidget.singleStep = 1.0
-    self.screenshotScaleFactorSliderWidget.minimum = 1.0
-    self.screenshotScaleFactorSliderWidget.maximum = 50.0
-    self.screenshotScaleFactorSliderWidget.value = 1.0
-    self.screenshotScaleFactorSliderWidget.setToolTip("Set scale factor for the screen shots.")
-    parametersFormLayout.addRow("Screenshot scale factor", self.screenshotScaleFactorSliderWidget)
+    #self.screenshotScaleFactorSliderWidget = ctk.ctkSliderWidget()
+    #self.screenshotScaleFactorSliderWidget.singleStep = 1.0
+    #self.screenshotScaleFactorSliderWidget.minimum = 1.0
+    #self.screenshotScaleFactorSliderWidget.maximum = 50.0
+    #self.screenshotScaleFactorSliderWidget.value = 1.0
+    #self.screenshotScaleFactorSliderWidget.setToolTip("Set scale factor for the screen shots.")
+    #parametersFormLayout.addRow("Screenshot scale factor", self.screenshotScaleFactorSliderWidget)
 
     #
     # Apply Button

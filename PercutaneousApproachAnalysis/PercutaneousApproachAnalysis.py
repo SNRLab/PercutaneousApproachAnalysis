@@ -218,6 +218,7 @@ class PercutaneousApproachAnalysisWidget:
     logic = PercutaneousApproachAnalysisLogic()
     print("onApplyButton() is called ")
     targetPoint = self.targetSelector.currentNode()
+    targetLabel = self.targetLabelSelector.currentNode()
     obstacleModel = self.obstacleModelSelector.currentNode()
     skinModel = self.skinModelSelector.currentNode()
     logic.run(targetPoint, obstacleModel, skinModel)

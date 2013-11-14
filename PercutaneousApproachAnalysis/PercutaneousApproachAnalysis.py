@@ -221,7 +221,7 @@ class PercutaneousApproachAnalysisWidget:
     targetLabel = self.targetLabelSelector.currentNode()
     obstacleModel = self.obstacleModelSelector.currentNode()
     skinModel = self.skinModelSelector.currentNode()
-    logic.run(targetPoint, obstacleModel, skinModel)
+    logic.run(targetPoint, targetLabel, obstacleModel, skinModel)
 
   def onReload(self,moduleName="PercutaneousApproachAnalysis"):
     """Generic reload method for any scripted module.

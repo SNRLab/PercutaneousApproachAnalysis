@@ -213,18 +213,27 @@ class PercutaneousApproachAnalysisWidget:
 
   def onSelect(self):
     if (self.targetSelector.currentNode() != None) and (self.targetLabelSelector.currentNode() == None) and (self.obstacleModelSelector.currentNode() != None) and (self.skinModelSelector.currentNode() != None):
-    	self.applyButton.enabled = True
-    if (self.targetSelector.currentNode() == None) and (self.targetLabelSelector.currentNode() != None) and (self.obstacleModelSelector.currentNode() != None) and (self.skinModelSelector.currentNode() != None):
-    	self.applyButton.enabled = True
+      self.applyButton.enabled = True
+    elif (self.targetSelector.currentNode() == None) and (self.targetLabelSelector.currentNode() != None) and (self.obstacleModelSelector.currentNode() != None) and (self.skinModelSelector.currentNode() != None):
+      self.applyButton.enabled = True
+    else:
+      self.applyButton.enabled = False
   
   def onApplyButton(self):
     logic = PercutaneousApproachAnalysisLogic()
     print("onApplyButton() is called ")
-    targetPoint = self.targetSelector.currentNode()
-    targetLabel = self.targetLabelSelector.currentNode()
     obstacleModel = self.obstacleModelSelector.currentNode()
     skinModel = self.skinModelSelector.currentNode()
-    logic.run(targetPoint, obstacleModel, skinModel)
+
+    if self.targetLabelSelector.currentNode() != None:
+      print("label ")
+      targetLabel = self.targetLabelSelector.currentNode()
+      logic.runLabelWise(targetLabel, obstacleModel, skinModel)
+    else:
+      print("point")
+      targetPoint = self.targetSelector.currentNode()
+      logic.runPointWise(targetPoint, obstacleModel, skinModel)
+
 
   def onReload(self,moduleName="PercutaneousApproachAnalysis"):
     """Generic reload method for any scripted module.
@@ -362,20 +371,11 @@ class PercutaneousApproachAnalysisLogic:
     annotationLogic = slicer.modules.annotations.logic()
     annotationLogic.CreateSnapShot(name, description, type, self.screenshotScaleFactor, imageData)
 
-  def run(self, targetPointNode, obstacleModelNode, skinModelNode):
-    """
-    Run the actual algorithm
-    """
-    print ('run() is called')
-    
-    tPoint = targetPointNode.GetMarkupPointVector(0, 0)
-    pTarget = [tPoint[0], tPoint[1], tPoint[2]]
-    poly = skinModelNode.GetPolyData()
-    polyDataNormals = vtk.vtkPolyDataNormals()
-    polyDataNormals.SetInput(poly)
-    polyDataNormals.ComputeCellNormalsOn()
-    polyDataNormals.Update()
-    polyData = polyDataNormals.GetOutput()
+
+  def calcApproachScore(self, point, skinPolyData, obstacleBspTree, skinModelNode=None):
+
+    pTarget = point
+    polyData = skinPolyData
     nPoints = polyData.GetNumberOfPoints()
     nCells = polyData.GetNumberOfCells()
     pSurface=[0.0, 0.0, 0.0]
@@ -386,20 +386,19 @@ class PercutaneousApproachAnalysisLogic:
     pcoords = [0.0, 0.0, 0.0]
     subId = vtk.mutable(0)
 
-    print ("nPoints = %d" % (nPoints))
-    print ("nCells = %d" % (nCells))
+    #print ("nPoints = %d" % (nPoints))
+    #print ("nCells = %d" % (nCells))
 
     # Map surface model
-    pointValue = vtk.vtkDoubleArray()
-    pointValue.SetName("Colors")
-    pointValue.SetNumberOfComponents(1)
-    pointValue.SetNumberOfTuples(nPoints)
-    pointValue.Reset()
-    pointValue.FillComponent(0,0.0);
+    if skinModelNode != None:
+      pointValue = vtk.vtkDoubleArray()
+      pointValue.SetName("Colors")
+      pointValue.SetNumberOfComponents(1)
+      pointValue.SetNumberOfTuples(nPoints)
+      pointValue.Reset()
+      pointValue.FillComponent(0,0.0);
     
-    bspTree = vtk.vtkModifiedBSPTree()
-    bspTree.SetDataSet(obstacleModelNode.GetPolyData())
-    bspTree.BuildLocator()
+    bspTree = obstacleBspTree
 
     cp0=[0.0, 0.0, 0.0]
     cp1=[0.0, 0.0, 0.0]
@@ -421,10 +420,11 @@ class PercutaneousApproachAnalysisLogic:
         vtk.vtkTriangle.TriangleCenter(cp0, cp1, cp2, pSurface)
         iD = bspTree.IntersectWithLine(pSurface, pTarget, tolerance, t, x, pcoords, subId)
         if iD > 0:
-          v = 50*iD+1
-          pointValue.InsertValue(ids.GetId(0), v)
-          pointValue.InsertValue(ids.GetId(1), v)
-          pointValue.InsertValue(ids.GetId(2), v)
+          if skinModelNode != None:
+            v = 50*iD+1
+            pointValue.InsertValue(ids.GetId(0), v)
+            pointValue.InsertValue(ids.GetId(1), v)
+            pointValue.InsertValue(ids.GetId(2), v)
           inaccessibleArea = inaccessibleArea + area
         else:
           accessibleArea = accessibleArea + area
@@ -434,14 +434,77 @@ class PercutaneousApproachAnalysisLogic:
 
     
     score = accessibleArea / (accessibleArea + inaccessibleArea)
-    print ("Approach Score (<accessible area> / (<accessible area> + <inaccessible area>)) = %f" % (score))
 
-    skinModelNode.AddPointScalars(pointValue)
-    skinModelNode.SetActivePointScalars("Colors", vtk.vtkDataSetAttributes.SCALARS)
-    skinModelNode.Modified()
-    displayNode = skinModelNode.GetModelDisplayNode()
-    displayNode.SetActiveScalarName("Colors")
-    displayNode.SetScalarRange(0,100)
+    if skinModelNode != None:
+      skinModelNode.AddPointScalars(pointValue)
+      skinModelNode.SetActivePointScalars("Colors", vtk.vtkDataSetAttributes.SCALARS)
+      skinModelNode.Modified()
+      displayNode = skinModelNode.GetModelDisplayNode()
+      displayNode.SetActiveScalarName("Colors")
+      displayNode.SetScalarRange(0,100)
+
+    return score
+    
+
+
+  def runLabelWise(self, targetLabelNode, obstacleModelNode, skinModelNode):
+    """
+    Run label-wise analysis
+    """
+
+    poly = skinModelNode.GetPolyData()
+    polyDataNormals = vtk.vtkPolyDataNormals()
+    polyDataNormals.SetInput(poly)
+    polyDataNormals.ComputeCellNormalsOn()
+    polyDataNormals.Update()
+    polyData = polyDataNormals.GetOutput()
+    
+    bspTree = vtk.vtkModifiedBSPTree()
+    bspTree.SetDataSet(obstacleModelNode.GetPolyData())
+    bspTree.BuildLocator()
+
+    trans = vtk.vtkMatrix4x4()
+    targetLabelNode.GetIJKToRASMatrix(trans)
+    pos = [0.0, 0.0, 0.0, 0.0]
+
+    imageData = targetLabelNode.GetImageData()
+    (x0, x1, y0, y1, z0, z1) = imageData.GetExtent()
+    for x in range(x0, x1):
+      for y in range(y0, y1):
+        for z in range(z0, z1):
+          if imageData.GetScalarComponentAsDouble(x, y, z, 0) > 0:
+            trans.MultiplyPoint([x, y, z, 1.0], pos);
+            score = self.calcApproachScore(pos[0:3], polyData, bspTree, None)
+            imageData.SetScalarComponentFromDouble(x, y, z, 0, score*100.0+1.0)
+            #print ("Index(%f, %f, %f)  -> RAS(%f, %f, %f)" % (x, y, z, pos[0], pos[1], pos[2]))
+            print ("Approach Score (<accessible area> / (<accessible area> + <inaccessible area>)) = %f" % (score))
+            
+    return True
+
+
+
+  def runPointWise(self, targetPointNode, obstacleModelNode, skinModelNode):
+    """
+    Run point-wise analysis
+    """
+
+    print ("runPointWise()")
+    tPoint = targetPointNode.GetMarkupPointVector(0, 0)
+    pTarget = [tPoint[0], tPoint[1], tPoint[2]]
+    poly = skinModelNode.GetPolyData()
+    polyDataNormals = vtk.vtkPolyDataNormals()
+    polyDataNormals.SetInput(poly)
+    polyDataNormals.ComputeCellNormalsOn()
+    polyDataNormals.Update()
+    polyData = polyDataNormals.GetOutput()
+
+    bspTree = vtk.vtkModifiedBSPTree()
+    bspTree.SetDataSet(obstacleModelNode.GetPolyData())
+    bspTree.BuildLocator()
+
+    score = self.calcApproachScore(pTarget, polyData, bspTree, skinModelNode)
+
+    print ("Approach Score (<accessible area> / (<accessible area> + <inaccessible area>)) = %f" % (score))
 
     return True
     

@@ -201,6 +201,7 @@ class PercutaneousApproachAnalysisWidget:
     # connections
     self.applyButton.connect('clicked(bool)', self.onApplyButton)
     self.targetSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
+    self.targetLabelSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
     self.obstacleModelSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
     self.skinModelSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
 
@@ -211,7 +212,9 @@ class PercutaneousApproachAnalysisWidget:
     pass
 
   def onSelect(self):
-    if (self.targetSelector.currentNode() != None) and (self.obstacleModelSelector.currentNode() != None) and (self.skinModelSelector.currentNode() != None):
+    if (self.targetSelector.currentNode() != None) and (self.targetLabelSelector.currentNode() == None) and (self.obstacleModelSelector.currentNode() != None) and (self.skinModelSelector.currentNode() != None):
+    	self.applyButton.enabled = True
+    if (self.targetSelector.currentNode() == None) and (self.targetLabelSelector.currentNode() != None) and (self.obstacleModelSelector.currentNode() != None) and (self.skinModelSelector.currentNode() != None):
     	self.applyButton.enabled = True
   
   def onApplyButton(self):
@@ -221,7 +224,7 @@ class PercutaneousApproachAnalysisWidget:
     targetLabel = self.targetLabelSelector.currentNode()
     obstacleModel = self.obstacleModelSelector.currentNode()
     skinModel = self.skinModelSelector.currentNode()
-    logic.run(targetPoint, targetLabel, obstacleModel, skinModel)
+    logic.run(targetPoint, obstacleModel, skinModel)
 
   def onReload(self,moduleName="PercutaneousApproachAnalysis"):
     """Generic reload method for any scripted module.

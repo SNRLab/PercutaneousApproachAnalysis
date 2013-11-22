@@ -469,15 +469,15 @@ class PercutaneousApproachAnalysisLogic:
 
     imageData = targetLabelNode.GetImageData()
     (x0, x1, y0, y1, z0, z1) = imageData.GetExtent()
-    for x in range(x0, x1):
-      for y in range(y0, y1):
-        for z in range(z0, z1):
+    for z in range(z0, z1+1):
+      for y in range(y0, y1+1):
+    	for x in range(x0, x1+1):
           if imageData.GetScalarComponentAsDouble(x, y, z, 0) > 0:
             trans.MultiplyPoint([x, y, z, 1.0], pos);
             score = self.calcApproachScore(pos[0:3], polyData, bspTree, None)
             imageData.SetScalarComponentFromDouble(x, y, z, 0, score*100.0+1.0)
             #print ("Index(%f, %f, %f)  -> RAS(%f, %f, %f)" % (x, y, z, pos[0], pos[1], pos[2]))
-            print ("Approach Score (<accessible area> / (<accessible area> + <inaccessible area>)) = %f" % (score))
+            #print ("Approach Score (<accessible area> / (<accessible area> + <inaccessible area>)) = %f" % (score))
             
     return True
 

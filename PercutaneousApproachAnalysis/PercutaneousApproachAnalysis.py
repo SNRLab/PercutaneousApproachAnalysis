@@ -236,7 +236,10 @@ class PercutaneousApproachAnalysisWidget:
     else:
       print("point")
       targetPoint = self.targetSelector.currentNode()
+      start = time.time()
       logic.runPointWise(targetPoint, obstacleModel, skinModel)
+      end = time.time()
+      print end - start
 
 
   def onReload(self,moduleName="PercutaneousApproachAnalysis"):

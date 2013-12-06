@@ -228,7 +228,10 @@ class PercutaneousApproachAnalysisWidget:
     if self.targetLabelSelector.currentNode() != None:
       print("label ")
       targetLabel = self.targetLabelSelector.currentNode()
+      starttime = $(date +%s)
       logic.runLabelWise(targetLabel, obstacleModel, skinModel)
+      endtime = $(date +%s)  
+    echo "It takes $(($endtime - $starttime)) seconds"
     else:
       print("point")
       targetPoint = self.targetSelector.currentNode()

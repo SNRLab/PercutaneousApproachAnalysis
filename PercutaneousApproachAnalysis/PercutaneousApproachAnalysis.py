@@ -1,7 +1,7 @@
 import os
 import unittest
 from __main__ import vtk, qt, ctk, slicer
-import timeit
+import time
 
 #
 # PercutaneousApproachAnalysis
@@ -229,9 +229,9 @@ class PercutaneousApproachAnalysisWidget:
     if self.targetLabelSelector.currentNode() != None:
       print("label ")
       targetLabel = self.targetLabelSelector.currentNode()
-      start = timeit.timeit()
+      start = time.time()
       logic.runLabelWise(targetLabel, obstacleModel, skinModel)
-      end = timeit.timeit()
+      end = time.time()
       print end - start
     else:
       print("point")

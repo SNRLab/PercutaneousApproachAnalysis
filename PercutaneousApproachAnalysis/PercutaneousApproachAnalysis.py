@@ -2,6 +2,7 @@ import os
 import unittest
 from __main__ import vtk, qt, ctk, slicer
 import time
+import math
 
 #
 # PercutaneousApproachAnalysis
@@ -416,6 +417,8 @@ class PercutaneousApproachAnalysisLogic:
 
     ids=vtk.vtkIdList()
 
+    minDistance = -1;
+
     for index in range(nCells):
       cell = polyData.GetCell(index)
       if cell.GetCellType() == vtk.VTK_TRIANGLE:
@@ -426,15 +429,24 @@ class PercutaneousApproachAnalysisLogic:
         polyData.GetPoint(ids.GetId(2), cp2)
         vtk.vtkTriangle.TriangleCenter(cp0, cp1, cp2, pSurface)
         iD = bspTree.IntersectWithLine(pSurface, pTarget, tolerance, t, x, pcoords, subId)
-        if iD > 0:
+        if iD < 1:
           if skinModelNode != None:
-            v = 50*iD+1
+            d = vtk.vtkMath.Distance2BetweenPoints(pSurface, pTarget)
+            d = math.sqrt(d)
+            if d < minDistance or minDistance < 0:
+              minDistance = d
+            v = d+101
+            pointValue.InsertValue(ids.GetId(0), v)
+            pointValue.InsertValue(ids.GetId(1), v)
+            pointValue.InsertValue(ids.GetId(2), v)
+          accessibleArea = accessibleArea + area
+        else:
+          if skinModelNode != None:
+            v = -1.0
             pointValue.InsertValue(ids.GetId(0), v)
             pointValue.InsertValue(ids.GetId(1), v)
             pointValue.InsertValue(ids.GetId(2), v)
           inaccessibleArea = inaccessibleArea + area
-        else:
-          accessibleArea = accessibleArea + area
 
       else:
         print ("ERROR: Non-triangular cell.")
@@ -448,9 +460,9 @@ class PercutaneousApproachAnalysisLogic:
       skinModelNode.Modified()
       displayNode = skinModelNode.GetModelDisplayNode()
       displayNode.SetActiveScalarName("Colors")
-      displayNode.SetScalarRange(0,100)
+      displayNode.SetScalarRange(0.0,200.0)
 
-    return score
+    return (score, minDistance)
     
 
 
@@ -481,7 +493,7 @@ class PercutaneousApproachAnalysisLogic:
     	for x in range(x0, x1+1):
           if imageData.GetScalarComponentAsDouble(x, y, z, 0) > 0:
             trans.MultiplyPoint([x, y, z, 1.0], pos);
-            score = self.calcApproachScore(pos[0:3], polyData, bspTree, None)
+            (score, mind) = self.calcApproachScore(pos[0:3], polyData, bspTree, None)
             imageData.SetScalarComponentFromDouble(x, y, z, 0, score*100.0+1.0)
             #print ("Index(%f, %f, %f)  -> RAS(%f, %f, %f)" % (x, y, z, pos[0], pos[1], pos[2]))
             #print ("Approach Score (<accessible area> / (<accessible area> + <inaccessible area>)) = %f" % (score))
@@ -509,9 +521,10 @@ class PercutaneousApproachAnalysisLogic:
     bspTree.SetDataSet(obstacleModelNode.GetPolyData())
     bspTree.BuildLocator()
 
-    score = self.calcApproachScore(pTarget, polyData, bspTree, skinModelNode)
+    (score, mind) = self.calcApproachScore(pTarget, polyData, bspTree, skinModelNode)
 
     print ("Approach Score (<accessible area> / (<accessible area> + <inaccessible area>)) = %f" % (score))
+    print ("Minmum Distance = %f" % (mind))
 
     return True
     

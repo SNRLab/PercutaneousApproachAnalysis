@@ -51,9 +51,6 @@ class PercutaneousApproachAnalysisWidget:
       self.setup()
       self.parent.show()
 
-    self.sceneReceived = slicer.mrmlScene
-    self.modelReceived = slicer.vtkMRMLModelNode()
-
   def setup(self):
     # Instantiate and connect widgets ...
 
@@ -90,6 +87,8 @@ class PercutaneousApproachAnalysisWidget:
     #
     parametersCollapsibleButton = ctk.ctkCollapsibleButton()
     parametersCollapsibleButton.text = "Parameters"
+    parametersCollapsibleButton.collapsed = False
+    self.parametersList = parametersCollapsibleButton   
     self.layout.addWidget(parametersCollapsibleButton)
 
     # Layout within the dummy collapsible button
@@ -121,7 +120,6 @@ class PercutaneousApproachAnalysisWidget:
     self.targetModelSelector.showChildNodeTypes = False
     self.targetModelSelector.setMRMLScene( slicer.mrmlScene )
     self.targetModelSelector.setToolTip( "Pick the target model to the algorithm." )
-    #parametersFormLayout.addRow("Target Model: ", self.targetModelSelector)
 
     #
     # Obstacle model (vtkMRMLModelNode)
@@ -162,9 +160,7 @@ class PercutaneousApproachAnalysisWidget:
     self.entryPointsSelector.showHidden = False
     self.entryPointsSelector.showChildNodeTypes = False
     self.entryPointsSelector.setMRMLScene( slicer.mrmlScene )
-    #self.entryPointsSelector.setToolTip( "Pick up the target point" )
     parametersFormLayout.addRow("Output Fiducial List: ", self.entryPointsSelector)
-
 
     #
     # Apply Button
@@ -180,59 +176,28 @@ class PercutaneousApproachAnalysisWidget:
     self.targetModelSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
     self.obstacleModelSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
     self.skinModelSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
-
+    self.entryPointsSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
+    
     #
     # Outcomes Area
     #
     outcomesCollapsibleButton = ctk.ctkCollapsibleButton()
     outcomesCollapsibleButton.text = "Outcomes"
+    outcomesCollapsibleButton.collapsed = True
     self.layout.addWidget(outcomesCollapsibleButton)
+
+    self.outcomesList = outcomesCollapsibleButton
 
     # Layout within the dummy collapsible button
     outcomesFormLayout = qt.QFormLayout(outcomesCollapsibleButton)
-
-    #
-    # Numbers of skin polygons
-    #
-    self.numbersOfSkinPolygonsSpinBox = ctk.ctkDoubleSpinBox()
-    self.numbersOfSkinPolygonsSpinBox.decimals = 0
-    self.numbersOfSkinPolygonsSpinBox.minimum = 0
-    self.numbersOfSkinPolygonsSpinBox.maximum = 10000000
-    self.numbersOfSkinPolygonsSpinBox.suffix = ""
-    #outcomesFormLayout.addRow("Numbers of Skin Polygons: ", self.numbersOfSkinPolygonsSpinBox)
-
-    #
-    # Numbers of approchable polygons
-    #
-    self.numbersOfApproachablePolygonsSpinBox = ctk.ctkDoubleSpinBox()
-    self.numbersOfApproachablePolygonsSpinBox.decimals = 0
-    self.numbersOfApproachablePolygonsSpinBox.minimum = 0
-    self.numbersOfApproachablePolygonsSpinBox.maximum = 10000000
-    self.numbersOfApproachablePolygonsSpinBox.suffix = ""
-    #outcomesFormLayout.addRow("Numbers of Approachable Polygons: ", self.numbersOfApproachablePolygonsSpinBox)
-
-    #
-    # Approachable Score
-    #
-    self.approachableScoreSpinBox = ctk.ctkDoubleSpinBox()
-    self.approachableScoreSpinBox.decimals = 2
-    self.approachableScoreSpinBox.minimum = 0
-    self.approachableScoreSpinBox.maximum = 10000000
-    self.approachableScoreSpinBox.suffix = ""
-    #outcomesFormLayout.addRow("Approachable Score: ", self.approachableScoreSpinBox)
-
-    #
-    # Check box for displaying all paths
-    #
-    self.approachableSkinMapCheckBox = ctk.ctkCheckBox()
-    self.approachableSkinMapCheckBox.text = "Show Approachable Skin Map:"
-    outcomesFormLayout.addRow(self.approachableSkinMapCheckBox)
 
     #
     # Check box for displaying all paths
     #
     self.allPathsCheckBox = ctk.ctkCheckBox()
     self.allPathsCheckBox.text = "Show All Paths:"
+    self.allPathsCheckBox.enabled = False
+    self.allPathsCheckBox.checked = True
     outcomesFormLayout.addRow(self.allPathsCheckBox)
 
     #
@@ -242,8 +207,16 @@ class PercutaneousApproachAnalysisWidget:
     self.numbersOfAllpathsSpinBox.decimals = 0
     self.numbersOfAllpathsSpinBox.minimum = 0
     self.numbersOfAllpathsSpinBox.maximum = 10000000
+    self.numbersOfAllpathsSpinBox.enabled = False
     self.numbersOfAllpathsSpinBox.suffix = ""
     outcomesFormLayout.addRow("      Numbers of All Paths: ", self.numbersOfAllpathsSpinBox)
+
+    #
+    # Check box for displaying all paths
+    #
+    self.approachableSkinMapCheckBox = ctk.ctkCheckBox()
+    self.approachableSkinMapCheckBox.text = "Show Approachable Skin Map:"
+    outcomesFormLayout.addRow(self.approachableSkinMapCheckBox)
 
     #
     # Check box for displaying each path
@@ -276,67 +249,48 @@ class PercutaneousApproachAnalysisWidget:
     #
     # Check box for displaying each path
     #
-    self.candidatePathCheckBox = ctk.ctkCheckBox()
-    self.candidatePathCheckBox.text = "Show Path Candidate:"
-    outcomesFormLayout.addRow(self.candidatePathCheckBox)
+    self.pathCandidateCheckBox = ctk.ctkCheckBox()
+    self.pathCandidateCheckBox.text = "Show Path Candidate:"
+    self.pathCandidateCheckBox.enabled = False 
+    self.pathCandidateCheckBox.checked = False    
+    outcomesFormLayout.addRow(self.pathCandidateCheckBox)
 
     # Path slider
     self.pathSlider = ctk.ctkSliderWidget()
-    #self.pathSlider.connect('valueChanged(double)', self.pathSliderValueChanged)
     self.pathSlider.decimals = 0
+    self.pathSlider.enabled = False
     outcomesFormLayout.addRow("      Path Candidates:", self.pathSlider)
-
-    # create path and skin button
-    self.createSkinPointButton = qt.QPushButton("Create Path and Skin Point")
-    #self.createSkinPointButton.toolTip = "Reload this module."
-    #self.createSkinPointButton.name = "PercutaneousApproachAnalysis Reload"
-    outcomesFormLayout.addRow("      Skin Point:", self.createSkinPointButton)
 
     # Point slider
     self.pointSlider = ctk.ctkSliderWidget()
-    #self.pathSlider.connect('valueChanged(double)', self.pathSliderValueChanged)
     self.pointSlider.decimals = 0
+    self.pointSlider.maximum = 5000
+    self.pointSlider.minimum = -5000
+    self.pointSlider.enabled = False
     outcomesFormLayout.addRow("      Point Candidates on the Path:", self.pointSlider)
+
+    #
+    # Length of the path
+    #
+    self.lengthOfPathSpinBox = ctk.ctkDoubleSpinBox()
+    self.lengthOfPathSpinBox.decimals = 1
+    self.lengthOfPathSpinBox.minimum = 0
+    self.lengthOfPathSpinBox.maximum = 10000000
+    self.lengthOfPathSpinBox.enabled = False
+    self.lengthOfPathSpinBox.suffix = ""
+    outcomesFormLayout.addRow("      Length of Path (mm): ", self.lengthOfPathSpinBox)
 
     # create point on the path
     self.createPointOnThePathButton = qt.QPushButton("Create Point on the Path")
-    #self.createSkinPointButton.toolTip = "Reload this module."
-    #self.createSkinPointButton.name = "PercutaneousApproachAnalysis Reload"
+    self.createPointOnThePathButton.enabled = False
     outcomesFormLayout.addRow("      Point on the Path:", self.createPointOnThePathButton)
 
-    #
-    # Check box for displaying all paths
-    #
-    #self.allPathsCheckBox2 = ctk.ctkCheckBox()
-    #self.allPathsCheckBox2.text = "Show All Paths"
-    #outcomesFormLayout.addRow("Show All Paths: ", self.allPathsCheckBox2)
-
-    #
-    # Paths planning Area
-    #
-    pathsplanningCollapsibleButton = ctk.ctkCollapsibleButton()
-    pathsplanningCollapsibleButton.text = "Paths Planning"
-    self.layout.addWidget(pathsplanningCollapsibleButton)
-
-    # Layout within the dummy collapsible button
-    pathPlanningFormLayout = qt.QFormLayout(pathsplanningCollapsibleButton)
-
-    #
-    # Create Paths Button
-    #
-    self.createPathsButton = qt.QPushButton("Create path")
-    self.createPathsButton.toolTip = "Run the algorithm."
-    self.createPathsButton.enabled = True    
-    pathPlanningFormLayout.addRow(self.createPathsButton)
-
-    # Frame slider
-    self.frameSlider = ctk.ctkSliderWidget()
-    self.frameSlider.connect('valueChanged(double)', self.frameSliderValueChanged)
-    self.frameSlider.decimals = 0
-    pathPlanningFormLayout.addRow("Path Candidates:", self.frameSlider)
-
     # connections
-    self.createPathsButton.connect('clicked(bool)', self.onCreatePathsButton)
+    self.pathCandidateCheckBox.connect("clicked(bool)", self.onCheckPathCandidate)
+    self.allPathsCheckBox.connect("clicked(bool)", self.onCheckAllPaths)
+    self.createPointOnThePathButton.connect('clicked(bool)', self.onCreatePointOnThePathButton)
+    self.pathSlider.connect('valueChanged(double)', self.pathSliderValueChanged)
+    self.pointSlider.connect('valueChanged(double)', self.pointSliderValueChanged)
 
     # Add vertical spacer
     self.layout.addStretch(1)
@@ -346,27 +300,87 @@ class PercutaneousApproachAnalysisWidget:
 
     # Create an array for all approachable points
     # tempolary solution 
-    self.apReceived = numpy.zeros([10000,3])
+    self.apReceived = numpy.zeros([80000,3])
   
     self.nPointsReceived = 0
     self.nPathReceived = 0
     self.frameSliderValue = 0
 
+    self.pathSliderValue = 0
+    self.pointSliderValue = 0
+
     # avoid initializing error for frameSliderValueChanged(self, newValue) function
     self.tmpSwitch = 0
+
+    self.pointMarker = slicer.vtkMRMLModelDisplayNode()
+    self.pointMarkerTransform = slicer.vtkMRMLLinearTransformNode()
+    self.virtualMarker = slicer.vtkMRMLModelDisplayNode()
+    self.virtualMarkerTransform = slicer.vtkMRMLLinearTransformNode()
+
+    self.allPaths = slicer.vtkMRMLModelDisplayNode()
+    self.candidatePath = slicer.vtkMRMLModelDisplayNode()
+
+    self.pathReceived = numpy.zeros([80000,3])
+
+    self.markerPosition = numpy.zeros([3])
+    self.virtualMarkerPosition = numpy.zeros([3])
+
+    self.onePathDistance = 0
+    self.virtualPathDistance = 0
+
+    # Switch
+    self.ON = 1
+    self.OFF = 0
+    self.VISIBLE = 1
+    self.INVISIBLE = 0
+
+    # scene and model variables
+    self.sceneReceived = slicer.mrmlScene
+    self.modelReceived = slicer.vtkMRMLModelNode()
+
+    self.singlePathScene = slicer.mrmlScene
+    self.singlePathModel = slicer.vtkMRMLModelNode()
+
+    self.virtualPathScene = slicer.mrmlScene
+    self.virtualPathModel = slicer.vtkMRMLModelNode()   
 
   def cleanup(self):
     pass
 
-  def frameSliderValueChanged(self, newValue):
+  def pathSliderValueChanged(self,newValue):
+    logic = PercutaneousApproachAnalysisLogic()
+    self.pathSliderValue = newValue
 
-    import numpy
-
-    #print "frameSliderValueChanged:", newValue
-    self.frameSliderValue = newValue
+    print(self.pathSliderValue)
  
-    if self.tmpSwitch == 1:
-      self.onCreatePathsButton()
+    logic.removeModel(self.singlePathScene, self.singlePathModel)
+    self.onePath, self.onePathDistance = logic.makeSinglePath(self.apReceived, self.pathSliderValue)
+    self.singlePathScene, self.singlePathModel, self.singleP, self.singlePath = NeedlePathModel().make(self.onePath, 2, self.VISIBLE)
+
+    self.markerPosition = SphereModel().move(self.apReceived, self.pathSliderValue, 0, self.pointMarkerTransform)
+    self.virtualMarkerPosition = SphereModel().move(self.apReceived, self.pathSliderValue, self.pointSliderValue, self.virtualMarkerTransform)
+    
+    logic.removeModel(self.virtualPathScene, self.virtualPathModel)
+    self.virtualPath, self.virtualPathDistance = logic.makeVirtualPath(self.apReceived, self.pathSliderValue, self.virtualMarkerPosition)
+    self.virtualPathScene, self.virtualPathModel, self.virtualP, self.virtualPath2 = NeedlePathModel().make(self.virtualPath, 2, self.VISIBLE)
+
+    self.lengthOfPathSpinBox.value = self.virtualPathDistance
+    #self.lengthOfPathSpinBox.value = self.onePathDistance
+
+  def pointSliderValueChanged(self,newValue):
+    logic = PercutaneousApproachAnalysisLogic()
+    self.pointSliderValue = newValue
+
+    self.virtualMarkerPosition = SphereModel().move(self.apReceived, self.pathSliderValue, self.pointSliderValue, self.virtualMarkerTransform)
+    
+    logic.removeModel(self.virtualPathScene, self.virtualPathModel)
+    self.virtualPath, self.virtualPathDistance = logic.makeVirtualPath(self.apReceived, self.pathSliderValue, self.virtualMarkerPosition)
+    self.virtualPathScene, self.virtualPathModel, self.virtualP, self.virtualPath2 = NeedlePathModel().make(self.virtualPath, 2, self.VISIBLE)
+
+    self.lengthOfPathSpinBox.value = self.virtualPathDistance
+    #self.lengthOfPathSpinBox.value = self.onePathDistance
+
+    #print(self.pointSliderValue)
 
   def onSelect(self):
     if (self.targetSelector.currentNode() != None) and (self.obstacleModelSelector.currentNode() != None) and (self.skinModelSelector.currentNode() != None):
@@ -375,50 +389,41 @@ class PercutaneousApproachAnalysisWidget:
       self.applyButton.enabled = True
       self.targetSwitch = 1
 
-  def onCreatePathsButton(self):
+  def onCreatePointOnThePathButton(self):
+    entryPointsNode = self.entryPointsSelector.currentNode()
 
-    import numpy
+    n = entryPointsNode.AddFiducial(self.virtualMarkerPosition[0], self.virtualMarkerPosition[1], self.virtualMarkerPosition[2])
+    entryPointsNode.SetNthFiducialLabel(n, "FiducialTest")
 
-    logic = PercutaneousApproachAnalysisLogic()
-    print("onCreatePathsButton() is called ")
+    #n1 = entryPointsNode.AddFiducial(14.0, 15.5, -16.0)    
+    #entryPointsNode.SetNthFiducialLabel(n1, "FiducialTest2")
+    #entryPointsNode.SetNthFiducialVisibility(n1,0)
 
-    # Remove VTK model
-    logic.removeAction(self.sceneReceived, self.modelReceived)
-    
-    # Change the range of the Slider based on the numbers of approachable polygons    
-    self.frameSlider.maximum = self.numbersOfApproachablePolygonsSpinBox.value
+  def onCheckAllPaths(self):
+    if self.allPathsCheckBox.checked == True:
+      self.allPaths.SetVisibility(self.ON)
+    else:
+      self.allPaths.SetVisibility(self.OFF)
 
-    # for debuging
-    #print(self.apReceived)
-
-    # for debuging. -> it's ok. (11/5/2013)
-    ppp = [0.0, 0.0, 0.0]
-    """
-    for number in range(0,self.nPointsReceived*2):
-      #print(self.apReceived[number*4])
-      #print(number*4+1)
-      print(self.apReceived[number][0])
-      print(self.apReceived[number][1])
-      print(self.apReceived[number][2])
-    """
-
-    # test to indicate one candidate for needle paths
-    tipPoint = numpy.zeros([2,3])
-
-    targetP = [self.apReceived[self.frameSliderValue*2][0], self.apReceived[self.frameSliderValue*2][1], self.apReceived[self.frameSliderValue*2][2]]
-    aSkinP = [self.apReceived[self.frameSliderValue*2+1][0], self.apReceived[self.frameSliderValue*2+1][1], self.apReceived[self.frameSliderValue*2+1][2]]
-    tipPoint[0] = targetP
-    tipPoint[1] = aSkinP
-    onePath = [tipPoint[0]]
-    onePath.append(tipPoint[1])
-
-    #print(onePath)
-
-    # Create the list for needle passing points to draw virtual god ray 
-    # target point and a point on skin
-    self.sceneReceived, self.modelReceived, pReceived = NeedlePathModel().run(onePath, 2)
-    self.tmpSwitch = 1
-
+  def onCheckPathCandidate(self):
+    #print(self.pointMarkerTransform)
+    if self.pathCandidateCheckBox.checked == True:
+      self.singlePath.SetVisibility(self.ON)
+      self.pointMarker.SetVisibility(self.ON)
+      self.virtualPath2.SetVisibility(self.ON)
+      self.virtualMarker.SetVisibility(self.ON) 
+      self.pointSlider.enabled = True
+      self.pathSlider.enabled = True
+      self.createPointOnThePathButton.enabled = True
+    else:
+      self.singlePath.SetVisibility(self.OFF)       
+      self.pointMarker.SetVisibility(self.OFF)    
+      self.virtualPath2.SetVisibility(self.OFF)       
+      self.virtualMarker.SetVisibility(self.OFF)
+      self.pointSlider.enabled = False
+      self.pathSlider.enabled = False
+      self.createPointOnThePathButton.enabled = False
+     
   def onApplyButton(self):
     logic = PercutaneousApproachAnalysisLogic()
     print("onApplyButton() is called ")
@@ -426,21 +431,49 @@ class PercutaneousApproachAnalysisWidget:
     targetModel = self.targetModelSelector.currentNode()
     obstacleModel = self.obstacleModelSelector.currentNode()
     skinModel = self.skinModelSelector.currentNode()
-    
-    self.nPointsReceived, self.nPathReceived, self.sceneReceived, self.modelReceived, self.apReceived = logic.run(targetPoint, targetModel, self.targetSwitch, obstacleModel, skinModel)
-    
-    # Update outcomes
-    # nPointsReceived equals total numbers of skin model
-    # nPathReceived equals total numbers of approachable points on the skin model
-    self.numbersOfSkinPolygonsSpinBox.value = self.nPointsReceived
-    self.numbersOfApproachablePolygonsSpinBox.value = self.nPathReceived
-    self.approachableScoreSpinBox.value = float(float(self.nPathReceived) / float(self.nPointsReceived))
 
-    # for debuging
-    print(float(self.nPointsReceived))
-    print(float(self.nPathReceived))
-    print(float(float(self.nPathReceived)/float(self.nPointsReceived)))
-    print(self.apReceived)
+    # make all paths candidates
+    #self.pathReceived, self.nPathReceived, self.apReceived = logic.makePaths(targetPoint, targetModel, self.targetSwitch, obstacleModel, skinModel)
+    self.pathReceived, self.nPathReceived, self.apReceived = logic.makePaths(targetPoint, targetModel, 0, obstacleModel, skinModel)
+    # display all paths model
+    #self.sceneReceived, self.modelReceived, pReceived, self.allPaths = NeedlePathModel().make(self.pathReceived, self.nPathReceived, self.VISIBLE)
+    self.sceneReceived, self.modelReceived, pReceived, self.allPaths = NeedlePathModel().make(self.pathReceived, self.nPathReceived, self.VISIBLE)
+
+    #print("self.apReceived = ", self.apReceived)
+    #print("self.nPathReceived = ", self.nPathReceived)
+
+    # display sphere model
+    self.pointMarker, self.pointMarkerTransform = SphereModel().make(self.INVISIBLE)
+    self.markerPosition = SphereModel().move(self.apReceived, self.pathSliderValue, self.pointSliderValue, self.pointMarkerTransform)
+    self.virtualMarker, self.virtualMarkerTransform = SphereModel().make(self.INVISIBLE)
+    self.virtualMarkerPosition = SphereModel().move(self.apReceived, self.pathSliderValue, self.pointSliderValue, self.virtualMarkerTransform)
+
+    #print("virtualMarkerPosition", self.virtualMarkerPosition)
+
+    # make single path candidate
+    self.onePath, self.onePathDistance = logic.makeSinglePath(self.apReceived, self.pathSliderValue)
+
+    # display single path candidate model
+    self.singlePathScene, self.singlePathModel, self.singleP, self.singlePath = NeedlePathModel().make(self.onePath, 2, self.INVISIBLE)
+
+    self.virtualPath, self.virtualPathDistance = logic.makeVirtualPath(self.apReceived, self.pathSliderValue, self.virtualMarkerPosition)
+    self.virtualPathScene, self.virtualPathModel, self.virtualP, self.virtualPath2 = NeedlePathModel().make(self.virtualPath, 2, self.VISIBLE)
+    self.lengthOfPathSpinBox.value = self.virtualPathDistance
+    #self.lengthOfPathSpinBox.value = self.onePathDistance
+  
+    # update outcomes
+    self.numbersOfAllpathsSpinBox.value = self.nPathReceived
+    self.pathSlider.maximum = self.nPathReceived
+    self.allPathsCheckBox.checked = True
+    self.allPathsCheckBox.enabled = True
+    self.pathCandidateCheckBox.enabled = True
+    self.outcomesList.collapsed = False
+    self.parametersList.collapsed = True
+
+    #self.frameSlider.maximum = self.nPathReceived
+
+    # finish calculation
+    self.finishCalculateFlag = 1
 
   def onReload(self,moduleName="PercutaneousApproachAnalysis"):
     """Generic reload method for any scripted module.
@@ -539,16 +572,52 @@ class PercutaneousApproachAnalysisLogic:
     qt.QTimer.singleShot(msec, self.info.close)
     self.info.exec_()
 
-  def removeAction(self, scene, model):
-    print ('removeAction() is called')
-    scene.RemoveNode(model)
-    #NeedlePathModel().RemovePathsModel()
+  def removeModel(self, scene, model):
+    scene.RemoveNode(model)    
 
-  def run(self, targetPointNode, targetModelNode, targetSwitch, obstacleModelNode, skinModelNode):
+  def makeSinglePath(self, p, pointNumber):  
+    import numpy 
+
+    tipPoint = numpy.zeros([2,3])
+
+    targetP = [p[pointNumber*2][0], p[pointNumber*2][1], p[pointNumber*2][2]]
+    skinP = [p[pointNumber*2+1][0], p[pointNumber*2+1][1], p[pointNumber*2+1][2]]
+
+    tipPoint[0] = targetP
+    tipPoint[1] = skinP
+
+    onePath = [targetP]
+    onePath.append(skinP)
+
+    distance = numpy.sqrt(numpy.power(p[pointNumber*2]-p[pointNumber*2+1],2).sum())
+
+    self.tmpSwitch = 1      
+
+    return (onePath, distance)
+
+  def makeVirtualPath(self, p, pointNumber, virtualPosition):
+    import numpy
+
+    tipPoint = numpy.zeros([2,3])
+
+    targetP = [virtualPosition[0], virtualPosition[1], virtualPosition[2]]
+    skinP = [p[pointNumber*2+1][0], p[pointNumber*2+1][1], p[pointNumber*2+1][2]]
+
+    tipPoint[0] = targetP
+    tipPoint[1] = skinP
+
+    onePath = [targetP]
+    onePath.append(skinP)
+
+    distance = numpy.sqrt(numpy.power(p[pointNumber*2]-virtualPosition,2).sum())
+
+    return (onePath, distance)
+
+  def makePaths(self, targetPointNode, targetModelNode, targetSwitch, obstacleModelNode, skinModelNode):
     """
     Run the actual algorithm
     """
-    print ('run() is called')
+    print ('makePaths() is called')
 
     import numpy
     
@@ -592,9 +661,6 @@ class PercutaneousApproachAnalysisLogic:
     bspTree.SetDataSet(obstacleModelNode.GetPolyData())
     bspTree.BuildLocator()
 
-    #print(float(nPoints))
-    #print(float(nPointsT))
-
     # Create an array for needle passing points 
     self.p = numpy.zeros([nPointsT*nPoints2,3])
 
@@ -608,6 +674,19 @@ class PercutaneousApproachAnalysisLogic:
         polyData.GetPoint(index, p1)
         iD = bspTree.IntersectWithLine(p1, p2, tolerance, t, x, pcoords, subId)
 
+        """  
+        index2 = index*2
+        approachablePoints = approachablePoints - 1
+
+        if iD == 0:
+          coord = [p2[0],p2[1],p2[2]]
+          self.p[indexT*nPoints2+index2] = coord
+          coord = [p1[0],p1[1],p1[2]]
+          approachablePoints = approachablePoints + 1
+          self.p[indexT*nPoints2+index2+1] = coord
+        """
+
+        
         # Pick up all needle passing points
         index2 = index*2
         coord = [p2[0],p2[1],p2[2]]
@@ -619,29 +698,98 @@ class PercutaneousApproachAnalysisLogic:
           approachablePoints = approachablePoints + 1
 
         self.p[indexT*nPoints2+index2+1] = coord
-
-        #print(coord)
-        # for debuging
-        #print('p1=[%f, %f, %f]' % (p1[0],p1[1],p1[2]))
-        #print('p2=[%f, %f, %f]' % (p2[0],p2[1],p2[2]))
-        #print('nPoints=%d, index=%d, iD=%d, t=(%f, x=%f, %f, %f)' % (nPoints, index, iD, t, x[0], x[1], x[2]))
+        
 
     # Create the list for needle passing points to draw virtual god ray 
     self.path = [self.p[0]]
-    for index2 in range(1, nPointsT*nPoints2):
+    #for index2 in range(1, nPointsT*nPoints2):
+    for index2 in range(1, approachablePoints):
       self.path.append(self.p[index2])  
   
     print(self.path)
-    # Draw the virtual god ray
 
     # Create an array for all approachable points 
     pReceived = numpy.zeros([approachablePoints,3])
 
-    #model = NeedlePathModel(self.path)
-    scene, model, pReceived = NeedlePathModel().run(self.path, approachablePoints)
+    return (self.path, approachablePoints, self.p)
 
-    #return (nPoints, float(float(approachablePoints)/float(nPointsT)), scene, model, pReceived)
-    return (nPoints, float(float(approachablePoints)/float(nPointsT)), scene, model, self.p)
+class SphereModel:
+
+  def __init__(self):
+    pass
+
+  def make(self, visibilityParam):
+    scene = slicer.mrmlScene
+
+    sphere = vtk.vtkSphereSource()
+    sphere.SetRadius(0.5)
+    sphere.SetPhiResolution(100)
+    sphere.SetThetaResolution(100)
+    sphere.Update()
+
+    sphere1 = vtk.vtkSphereSource()
+    sphere1.SetRadius(2.5)
+    sphere1.SetPhiResolution(100)
+    sphere1.SetThetaResolution(100)
+    sphere1.SetCenter(20,20,20)
+    sphere1.Update()
+
+    # Create model node
+    sphereCursor = slicer.vtkMRMLModelNode()
+    sphereCursor.SetScene(scene)
+    sphereCursor.SetName(scene.GenerateUniqueName("Marker"))
+    #sphereCursor.SetAndObservePolyData(sphere1.GetOutput())
+    sphereCursor.SetAndObservePolyData(sphere.GetOutput())
+
+    # Create display node
+    cursorModelDisplay = slicer.vtkMRMLModelDisplayNode()
+    cursorModelDisplay.SetColor(1,0,0) # red
+    cursorModelDisplay.SetOpacity(0.3)    
+    cursorModelDisplay.SetScene(scene)
+    cursorModelDisplay.SetVisibility(visibilityParam)  
+    scene.AddNode(cursorModelDisplay)
+    sphereCursor.SetAndObserveDisplayNodeID(cursorModelDisplay.GetID())
+
+    # Add to scene
+    #cursorModelDisplay.SetInputPolyData(sphere1.GetOutput())
+    cursorModelDisplay.SetInputPolyData(sphere.GetOutput())
+    scene.AddNode(sphereCursor)
+
+    # Create transform node
+    transform = slicer.vtkMRMLLinearTransformNode()
+    transform.SetName(scene.GenerateUniqueName("TransformForMarker"))
+    scene.AddNode(transform)
+    sphereCursor.SetAndObserveTransformNodeID(transform.GetID())
+
+    #return (scene, cursorModelDisplay, transform)
+    return (cursorModelDisplay, transform)
+
+  def move(self, p, pointNumber, pointSliderValue, transform):
+
+    r = p[pointNumber*2+1][0]
+    a = p[pointNumber*2+1][1]
+    s = p[pointNumber*2+1][2]
+    
+    targetR = p[pointNumber*2][0]
+    targetA = p[pointNumber*2][1]
+    targetS = p[pointNumber*2][2]
+    
+    dirVectorR = r-targetR
+    dirVectorA = a-targetA
+    dirVectorS = s-targetS
+    
+    movedR = r + pointSliderValue*0.001*dirVectorR
+    movedA = a + pointSliderValue*0.001*dirVectorA
+    movedS = s + pointSliderValue*0.001*dirVectorS
+    
+    coordinate = transform.GetMatrixTransformToParent()
+    coordinate.SetElement(0,3,movedR)
+    coordinate.SetElement(1,3,movedA)
+    coordinate.SetElement(2,3,movedS)
+
+    movedRAS = [movedR, movedA, movedS]
+
+    return movedRAS
 
 # NeedlePathModel class is based on EndoscopyPathModel class for Endoscopy module
 class NeedlePathModel:
@@ -654,13 +802,18 @@ class NeedlePathModel:
     #self.sceneStored = slicer.mrmlScene
     pass
 
-  def run(self, path, approachablePoints):
+  def recreatePathPolyData(self):
+    pass
+
+  def make(self, path, approachablePoints, visibilityParam):
 
     import numpy
 
     # Create an array for all approachable points 
     p = numpy.zeros([approachablePoints*2,3])
     p1 = [0.0, 0.0, 0.0]
+
+    print("approachablePoints*2 = %d", approachablePoints*2)
 
     scene = slicer.mrmlScene
     
@@ -686,12 +839,7 @@ class NeedlePathModel:
       linesIDArray.SetTuple1( 0, linesIDArray.GetNumberOfTuples() - 1 )
       lines.SetNumberOfCells(1)
 
-      # for debuging to check contents of tuples
-      #print(pointIndex)
-      #print(approachablePoints)
-      ##print(linesIDArray.GetTuple1(1))
-      ##print(linesIDArray.GetTuple1(2))
-      ##print(linesIDArray.GetTuple1(3))
+      print("pointIndex = %d", pointIndex)
 
       # Save all approachable points 
       p1[0] = linesIDArray.GetTuple1(1)
@@ -701,36 +849,29 @@ class NeedlePathModel:
       coord = [p1[0], p1[1], p1[2]]
       p[pointIndex] = coord
 
-      #print(coord)
-
     # Create model node
     model = slicer.vtkMRMLModelNode()
     model.SetScene(scene)
     model.SetName(scene.GenerateUniqueName("NeedlePaths"))
     model.SetAndObservePolyData(polyData)
 
-    # Create model node
-    point = slicer.vtkMRMLMarkupsFiducialNode()
-    n = point.AddFiducial(4.0, 5.5, -6.0)
-    point.SetNthFiducialLabel(n, "FiducialTest")
-    idl = point.GetNthMarkupID(n)
-    point.SetNthFiducialVisibility(n,0)
-    #point.SetScene(scene)
-    #point.SetName(scene.GenerateUniqueName("FiducialTest"))
-    #point.SetAndObservePolyData(polyData)
+    #polyData.Update()
 
     # Create display node
     modelDisplay = slicer.vtkMRMLModelDisplayNode()
     modelDisplay.SetColor(1,1,0) # yellow
     modelDisplay.SetScene(scene)
+    modelDisplay.SetVisibility(visibilityParam)
     scene.AddNode(modelDisplay)
     model.SetAndObserveDisplayNodeID(modelDisplay.GetID())
+
+    print(modelDisplay)
 
     # Add to scene
     modelDisplay.SetInputPolyData(model.GetPolyData())
     scene.AddNode(model)
 
-    return (scene, model, p)
+    return (scene, model, p, modelDisplay)    
 
 class PercutaneousApproachAnalysisTest(unittest.TestCase):
   """

@@ -36,7 +36,7 @@ class PercutaneousApproachAnalysis:
     tester.runTest()
 
 #
-# qPercutaneousApproachAnalysisWidget
+# PercutaneousApproachAnalysisWidget
 #
 
 class PercutaneousApproachAnalysisWidget:
@@ -207,7 +207,53 @@ class PercutaneousApproachAnalysisWidget:
     self.targetLabelSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
     self.obstacleModelSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
     self.skinModelSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
+    
+    
+	#
+    # Output Area
+    #
+    outputCollapsibleButton = ctk.ctkCollapsibleButton()
+    outputCollapsibleButton.text = "Output / Results"
+    self.layout.addWidget(outputCollapsibleButton)
 
+    # Layout within the dummy collapsible button
+    outputFormLayout = qt.QFormLayout(outputCollapsibleButton)
+
+    # Accessibility score results
+    self.accessibilityScore = qt.QLineEdit()
+    self.accessibilityScore.toolTip = "Accessibility Score"
+    self.accessibilityScore.enabled = True
+    self.accessibilityScore.maximumWidth = 70
+    self.accessibilityScore.setReadOnly(True)
+    self.accessibilityScore.inputMask = "0.000"
+    self.accessibilityScore.maxLength = 4
+    outputFormLayout.addRow("Accesibility Score:",self.accessibilityScore)
+    
+    # Minimum distance results
+    self.minimumDistance = qt.QLineEdit()
+    self.minimumDistance.toolTip = "Minimum Distance"
+    self.minimumDistance.enabled = True
+    self.minimumDistance.maximumWidth = 70
+    self.minimumDistance.setReadOnly(True)
+    self.minimumDistance.inputMask = "0.000"
+    self.minimumDistance.maxLength = 4
+    outputFormLayout.addRow("Minimum Distance:",self.minimumDistance)
+    
+    #
+    # Minimum distance point (vtkMRMLMarkupsFiducialNode)
+    #
+    self.minimumDistancePoint = slicer.qMRMLNodeComboBox()
+    self.minimumDistancePoint.nodeTypes = ( ("vtkMRMLMarkupsFiducialNode"), "" )
+    self.minimumDistancePoint.addEnabled = True
+    self.minimumDistancePoint.removeEnabled = True
+    self.minimumDistancePoint.noneEnabled = True
+    self.minimumDistancePoint.showHidden = False
+    self.minimumDistancePoint.showChildNodeTypes = False
+    self.minimumDistancePoint.setMRMLScene( slicer.mrmlScene )
+    self.minimumDistancePoint.setToolTip( "Display the minimum distance point" )
+    self.minimumDistancePoint.baseName = "PAA-MinimumDistance"
+    outputFormLayout.addRow("Minimum Distance Point: ", self.minimumDistancePoint)
+    
     # Add vertical spacer
     self.layout.addStretch(1)
 
@@ -239,7 +285,22 @@ class PercutaneousApproachAnalysisWidget:
       print("point")
       targetPoint = self.targetSelector.currentNode()
       start = time.time()
-      logic.runPointWise(targetPoint, obstacleModel, skinModel)
+      (score, mind, mindp) = logic.runPointWise(targetPoint, obstacleModel, skinModel)
+      
+      self.accessibilityScore.text = score
+      self.minimumDistance.text = mind
+      
+      markupNode = self.minimumDistancePoint.currentNode()
+      if markupNode != None:
+        markupNode.RemoveAllMarkups()
+        displayNode = markupNode.GetDisplayNode()
+        if displayNode != None:
+        	# Change these values to modified fiducial and text size
+    		displayNode.SetGlyphScale(0.5)
+    		displayNode.SetTextScale(0.5)
+        vtkMinDistPoint = vtk.vtkVector3d(mindp)
+      	markupNode.AddPointToNewMarkup(vtkMinDistPoint)
+      
       end = time.time()
       print end - start
 
@@ -388,7 +449,8 @@ class PercutaneousApproachAnalysisLogic:
     nPoints = polyData.GetNumberOfPoints()
     nCells = polyData.GetNumberOfCells()
     pSurface=[0.0, 0.0, 0.0]
-    
+    minDistancePoint = [0.0, 0.0, 0.0]
+
     tolerance = 0.001
     t = vtk.mutable(0.0)
     x = [0.0, 0.0, 0.0]
@@ -436,6 +498,7 @@ class PercutaneousApproachAnalysisLogic:
             d = math.sqrt(d)
             if d < minDistance or minDistance < 0:
               minDistance = d
+              minDistancePoint = [pSurface[0],pSurface[1],pSurface[2]]
             v = d+101
             pointValue.InsertValue(ids.GetId(0), v)
             pointValue.InsertValue(ids.GetId(1), v)
@@ -463,7 +526,8 @@ class PercutaneousApproachAnalysisLogic:
       displayNode.SetActiveScalarName("Colors")
       displayNode.SetScalarRange(0.0,200.0)
 
-    return (score, minDistance)
+
+    return (score, minDistance, minDistancePoint)
     
 
 
@@ -494,7 +558,7 @@ class PercutaneousApproachAnalysisLogic:
     	for x in range(x0, x1+1):
           if imageData.GetScalarComponentAsDouble(x, y, z, 0) > 0:
             trans.MultiplyPoint([x, y, z, 1.0], pos);
-            (score, mind) = self.calcApproachScore(pos[0:3], polyData, bspTree, None)
+            (score, mind, mindp) = self.calcApproachScore(pos[0:3], polyData, bspTree, None)
             imageData.SetScalarComponentFromDouble(x, y, z, 0, score*100.0+1.0)
             #print ("Index(%f, %f, %f)  -> RAS(%f, %f, %f)" % (x, y, z, pos[0], pos[1], pos[2]))
             #print ("Approach Score (<accessible area> / (<accessible area> + <inaccessible area>)) = %f" % (score))
@@ -522,12 +586,12 @@ class PercutaneousApproachAnalysisLogic:
     bspTree.SetDataSet(obstacleModelNode.GetPolyData())
     bspTree.BuildLocator()
 
-    (score, mind) = self.calcApproachScore(pTarget, polyData, bspTree, skinModelNode)
+    (score, mind, mindp) = self.calcApproachScore(pTarget, polyData, bspTree, skinModelNode)
 
     print ("Approach Score (<accessible area> / (<accessible area> + <inaccessible area>)) = %f" % (score))
     print ("Minmum Distance = %f" % (mind))
 
-    return True
+    return (score, mind, mindp)
     
 
 class PercutaneousApproachAnalysisTest(unittest.TestCase):

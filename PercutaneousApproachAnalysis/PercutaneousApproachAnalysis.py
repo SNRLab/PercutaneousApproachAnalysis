@@ -222,11 +222,11 @@ class PercutaneousApproachAnalysisWidget:
     self.accessibilityScore = qt.QLineEdit()
     self.accessibilityScore.toolTip = "Accessibility Score"
     self.accessibilityScore.enabled = True
-    self.accessibilityScore.maximumWidth = 70
+    self.accessibilityScore.maximumWidth = 100
     self.accessibilityScore.setReadOnly(True)
-    self.accessibilityScore.inputMask = "0.000"
+    #self.accessibilityScore.inputMask = "0.000"
     self.accessibilityScore.maxLength = 4
-    outputFormLayout.addRow("Accesibility Score:",self.accessibilityScore)
+    outputFormLayout.addRow("Accessible Area:",self.accessibilityScore)
     
     # Minimum distance results
     self.minimumDistance = qt.QLineEdit()
@@ -234,7 +234,7 @@ class PercutaneousApproachAnalysisWidget:
     self.minimumDistance.enabled = True
     self.minimumDistance.maximumWidth = 70
     self.minimumDistance.setReadOnly(True)
-    self.minimumDistance.inputMask = "0.000"
+    #self.minimumDistance.inputMask = "0.000"
     self.minimumDistance.maxLength = 4
     outputFormLayout.addRow("Minimum Distance:",self.minimumDistance)
     
@@ -449,7 +449,7 @@ class PercutaneousApproachAnalysisLogic:
     nCells = polyData.GetNumberOfCells()
     pSurface=[0.0, 0.0, 0.0]
     minDistancePoint = [0.0, 0.0, 0.0]
-
+	
     tolerance = 0.001
     t = vtk.mutable(0.0)
     x = [0.0, 0.0, 0.0]
@@ -476,11 +476,12 @@ class PercutaneousApproachAnalysisLogic:
 
     accessibleArea = 0.0
     inaccessibleArea = 0.0
-
+    modifiedArea = 0.0
+	 
     ids=vtk.vtkIdList()
 
     minDistance = -1;
-
+	
     for index in range(nCells):
       cell = polyData.GetCell(index)
       if cell.GetCellType() == vtk.VTK_TRIANGLE:
@@ -495,14 +496,24 @@ class PercutaneousApproachAnalysisLogic:
           if skinModelNode != None:
             d = vtk.vtkMath.Distance2BetweenPoints(pSurface, pTarget)
             d = math.sqrt(d)
+            modifiedArea = area * (130 - d) / 130
+            
             if d < minDistance or minDistance < 0:
               minDistance = d
               minDistancePoint = [pSurface[0],pSurface[1],pSurface[2]]
-            v = d+101
+            
+            v = 0  
+            if d < 130:
+              v = d + 101
+            else:
+              v = -1.0
+              
             pointValue.InsertValue(ids.GetId(0), v)
             pointValue.InsertValue(ids.GetId(1), v)
             pointValue.InsertValue(ids.GetId(2), v)
-          accessibleArea = accessibleArea + area
+            
+          accessibleArea = accessibleArea + modifiedArea
+        
         else:
           if skinModelNode != None:
             v = -1.0
@@ -515,7 +526,7 @@ class PercutaneousApproachAnalysisLogic:
         print ("ERROR: Non-triangular cell.")
 
     
-    score = accessibleArea / (accessibleArea + inaccessibleArea)
+    score = accessibleArea
 
     if skinModelNode != None:
       skinModelNode.AddPointScalars(pointValue)
@@ -523,7 +534,7 @@ class PercutaneousApproachAnalysisLogic:
       skinModelNode.Modified()
       displayNode = skinModelNode.GetModelDisplayNode()
       displayNode.SetActiveScalarName("Colors")
-      displayNode.SetScalarRange(0.0,200.0)
+      displayNode.SetScalarRange(0.0,20.0)
 
 
     return (score, minDistance, minDistancePoint)
@@ -587,7 +598,7 @@ class PercutaneousApproachAnalysisLogic:
 
     (score, mind, mindp) = self.calcApproachScore(pTarget, polyData, bspTree, skinModelNode)
 
-    print ("Approach Score (<accessible area> / (<accessible area> + <inaccessible area>)) = %f" % (score))
+    print ("Accessible Area = %f" % (score))
     print ("Minmum Distance = %f" % (mind))
 
     return (score, mind, mindp)

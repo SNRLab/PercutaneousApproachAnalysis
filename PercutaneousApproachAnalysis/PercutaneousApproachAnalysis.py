@@ -221,13 +221,13 @@ class PercutaneousApproachAnalysisWidget:
 
     # Accessibility score results
     self.accessibilityScore = qt.QLineEdit()
-    self.accessibilityScore.toolTip = "Accessibility Score"
+    self.accessibilityScore.toolTip = "Modified Accessibility Score"
     self.accessibilityScore.enabled = True
     self.accessibilityScore.maximumWidth = 100
     self.accessibilityScore.setReadOnly(True)
     #self.accessibilityScore.inputMask = "0.000"
     self.accessibilityScore.maxLength = 4
-    outputFormLayout.addRow("Accessible Area:",self.accessibilityScore)
+    outputFormLayout.addRow("Modified Accessible Area:",self.accessibilityScore)
     
     # Minimum distance results
     self.minimumDistance = qt.QLineEdit()
@@ -506,6 +506,7 @@ class PercutaneousApproachAnalysisLogic:
             v = 0  
             if d < 130:
               v = d + 101
+              accessibleArea = accessibleArea + modifiedArea
             else:
               v = -1.0
               
@@ -513,7 +514,7 @@ class PercutaneousApproachAnalysisLogic:
             pointValue.InsertValue(ids.GetId(1), v)
             pointValue.InsertValue(ids.GetId(2), v)
             
-          accessibleArea = accessibleArea + modifiedArea
+          
         
         else:
           if skinModelNode != None:

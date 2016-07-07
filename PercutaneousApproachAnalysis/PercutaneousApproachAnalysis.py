@@ -11,7 +11,7 @@ class PercutaneousApproachAnalysis:
     parent.categories = ["IGT"]
     parent.dependencies = []
     parent.contributors = ["Atsushi Yamada (Shiga University of Medical Science),Koichiro Murakami (Shiga University of Medical Science, Japan, SPL), Laurent Chauvin (SPL), Junichi Tokuda (SPL)"] 
-    parent.helpText = string.Template("""
+    # parent.helpText = string.Template("""
     The Percutaneous Approach Analysis is used to calculate and visualize the accessibility to liver tumor with a percutaneous approach.
     See <a href=http://wiki.slicer.org/slicerWiki/index.php/Documentation/Nightly/Extensions/PercutaneousApproachAnalysis>the online documentation</a> to know how to use in detail.
     """).substitute({ 'a':parent.slicerWikiUrl, 'b':slicer.app.majorVersion, 'c':slicer.app.minorVersion })

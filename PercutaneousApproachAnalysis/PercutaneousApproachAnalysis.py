@@ -16,9 +16,9 @@ class PercutaneousApproachAnalysis:
     # See <a href=http://wiki.slicer.org/slicerWiki/index.php/Documentation/Nightly/Extensions/PercutaneousApproachAnalysis>the online documentation</a> to know how to use in detail.
     # """).substitute({ 'a':parent.slicerWikiUrl, 'b':slicer.app.majorVersion, 'c':slicer.app.minorVersion })
      parent.acknowledgementText = """    
-    # This work is supported by Bio-Medical Innovation Center and Department of Surgery, Shiga University of Medical Science in Japan. 
-    # This work is also supported in part by the NIH (R01CA111288, P01CA067165, P41RR019703, P41EB015898, R01CA124377, R01CA138586, R42CA137886).
-    # """
+    This work is supported by Bio-Medical Innovation Center and Department of Surgery, Shiga University of Medical Science in Japan. 
+    This work is also supported in part by the NIH (R01CA111288, P01CA067165, P41RR019703, P41EB015898, R01CA124377, R01CA138586, R42CA137886).
+    """
     self.parent = parent
 
     # Add this test to the SelfTest module's list for discovery when the module

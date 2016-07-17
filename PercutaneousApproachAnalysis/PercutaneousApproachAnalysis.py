@@ -7,6 +7,7 @@ import math
 
 class PercutaneousApproachAnalysis:
   def __init__(self, parent):
+    import string
     parent.title = "PercutaneousApproachAnalysis" # TODO make this more human readable by adding spaces
     parent.categories = ["IGT"]
     parent.dependencies = []

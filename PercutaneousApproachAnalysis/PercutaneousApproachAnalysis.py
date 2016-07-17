@@ -3,7 +3,7 @@ import unittest
 from __main__ import vtk, qt, ctk, slicer
 import time
 import math
-
+import string
 
 class PercutaneousApproachAnalysis:
   def __init__(self, parent):
@@ -579,7 +579,7 @@ class PercutaneousApproachAnalysisWidget:
   def onCheckColorMappedSkin(self):
     skinModel = self.skinModelSelector.currentNode()
     modelDisplay = skinModel.GetDisplayNode()
-    scalarSetting = slicer.modulewidget.qMRMLModelDisplayNodeWidget()
+    scalarSetting = slicer.qMRMLModelDisplayNodeWidget()
     scalarSetting.setMRMLModelDisplayNode(modelDisplay)
     displayNode = skinModel.GetModelDisplayNode()
     displayNode.SetActiveScalarName("Normals")
@@ -1135,7 +1135,7 @@ class PercutaneousApproachAnalysisLogic:
       displayNode = skinModelNode.GetModelDisplayNode()
       displayNode.SetActiveScalarName("Colors")
       displayNode.SetScalarRange(0.0,20.0)
-      scalarSetting = slicer.modulewidget.qMRMLModelDisplayNodeWidget()
+      scalarSetting = slicer.qMRMLModelDisplayNodeWidget()
       scalarSetting.setMRMLModelDisplayNode(displayNode)
       scalarSetting.setScalarsVisibility(invisible)
 

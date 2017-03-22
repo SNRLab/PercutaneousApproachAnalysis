@@ -3,7 +3,7 @@ import unittest
 from __main__ import vtk, qt, ctk, slicer
 import time
 import math
-
+import string
 
 class PercutaneousApproachAnalysis:
   def __init__(self, parent):

@@ -509,7 +509,7 @@ class PercutaneousApproachAnalysisWidget:
 
   def pathSliderValueChanged(self,newValue):
     logic = PercutaneousApproachAnalysisLogic()
-    self.pathSliderValue = newValue
+    self.pathSliderValue = int(newValue)
 
     self.onePath, self.onePathDistance = logic.makeSinglePath(self.apReceived, self.pathSliderValue)
     NeedlePathModel().modify(self.onePath, 1, self.VISIBLE, self.red, "pathCandidate", self.singleLine, self.singlePathModel, self.singlePath, self.singlePathPoints)
@@ -580,25 +580,20 @@ class PercutaneousApproachAnalysisWidget:
   def onCheckColorMappedSkin(self):
     skinModel = self.skinModelSelector.currentNode()
     modelDisplay = skinModel.GetDisplayNode()
-    scalarSetting = slicer.qMRMLModelDisplayNodeWidget()
-    scalarSetting.setMRMLModelDisplayNode(modelDisplay)
     displayNode = skinModel.GetModelDisplayNode()
-    displayNode.SetActiveScalarName("Normals")
+    displayNode.SetActiveScalar('Normals', vtk.vtkAssignAttribute.POINT_DATA)
 
-    visible = 1
-    invisible = 0
-    
     if self.colorMapCheckBox.checked == True:
-      scalarSetting.setScalarsVisibility(visible)
+      displayNode.SetScalarVisibility(True)
 
       # Need to reload the skin model after "displayNode.SetActiveScalarName("Normals")" 
       # to display color map correctly 
-      displayNode.SetActiveScalarName("Colors")
-      scalarSetting.setScalarsVisibility(visible)
-            
+      displayNode.SetActiveScalar('Colors', vtk.vtkAssignAttribute.CELL_DATA)
+      displayNode.SetScalarVisibility(True)
+
       self.coloredSkinModelOpacitySlider.enabled = True
     else:
-      scalarSetting.setScalarsVisibility(invisible)
+      displayNode.SetScalarVisibility(False)
       self.coloredSkinModelOpacitySlider.enabled = False
 
 
@@ -772,7 +767,7 @@ class PercutaneousApproachAnalysisWidget:
       evalString = 'globals()["%s"].%sTest()' % (moduleName, moduleName)
       tester = eval(evalString)
       tester.runTest()
-    except Exception, e:
+    except Exception as e:
       import traceback
       traceback.print_exc()
       qt.QMessageBox.warning(slicer.util.mainWindow(), 
@@ -1136,9 +1131,7 @@ class PercutaneousApproachAnalysisLogic:
       displayNode = skinModelNode.GetModelDisplayNode()
       displayNode.SetActiveScalarName("Colors")
       displayNode.SetScalarRange(0.0,20.0)
-      scalarSetting = slicer.qMRMLModelDisplayNodeWidget()
-      scalarSetting.setMRMLModelDisplayNode(displayNode)
-      scalarSetting.setScalarsVisibility(invisible)
+      displayNode.SetScalarVisibility(False)
 
     return (score, minDistance, minDistancePoint)
     
@@ -1294,19 +1287,16 @@ class NeedlePathModel:
         linesIDArray.SetTuple1( 0, linesIDArray.GetNumberOfTuples() - 1 )
         lines.SetNumberOfCells(1)
 
-  def make(self, path, approachablePoints, visibilityParam, color, modelName, lineType):
+  def make(self, path, approachablePoints, visibilityParam, color, modelName, polyData):
 
     import numpy
 
     # Create an array for all approachable points 
     p = numpy.zeros([approachablePoints*2,3])
-    p1 = [0.0, 0.0, 0.0]
 
     scene = slicer.mrmlScene
      
     self.points = vtk.vtkPoints()
-    polyData = vtk.vtkPolyData()
-    polyData = lineType
     polyData.SetPoints(self.points)
  
     lines = vtk.vtkCellArray()
@@ -1330,12 +1320,7 @@ class NeedlePathModel:
         lines.SetNumberOfCells(1)
 
         # Save all approachable points 
-        p1[0] = linesIDArray.GetTuple1(1)
-        p1[1] = linesIDArray.GetTuple1(2)
-        p1[2] = linesIDArray.GetTuple1(3)
-
-        coord = [p1[0], p1[1], p1[2]]
-        p[pointIndex] = coord
+        p[pointIndex] = point
 
     # Create model node
     model = slicer.vtkMRMLModelNode()
